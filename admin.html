@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Yine Bekleriz · Panel</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root {
+    --zemin: #14110c; --kart: #1f1a12; --cizgi: #3a3020;
+    --altin: #d4a843; --altin-acik: #f0d48a; --yazi: #f3ede1; --soluk: #a99c84;
+    --kirmizi: #d9655b; --yesil: #6fbf73;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--zemin); color: var(--yazi); font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .sar { max-width: 640px; margin: 0 auto; padding: 16px 16px 60px; }
+  h1 { font-size: 20px; color: var(--altin); margin: 4px 0 16px; }
+  h2 { font-size: 16px; margin: 0 0 12px; color: var(--altin-acik); }
+  .kart { background: var(--kart); border: 1px solid var(--cizgi); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
+  input, select, button { font: inherit; }
+  input, select {
+    width: 100%; padding: 11px 12px; border-radius: 10px; border: 1px solid var(--cizgi);
+    background: #0f0c08; color: var(--yazi); margin-bottom: 10px;
+  }
+  label { font-size: 12px; color: var(--soluk); display: block; margin-bottom: 4px; }
+  .izgara { display: grid; grid-template-columns: 1fr 1fr; gap: 0 10px; }
+  button {
+    padding: 11px 14px; border-radius: 10px; border: 0; cursor: pointer;
+    background: var(--altin); color: #1b150c; font-weight: 600;
+  }
+  button.ikincil { background: transparent; color: var(--altin); border: 1px solid var(--altin); }
+  button.sil { background: transparent; color: var(--kirmizi); border: 0; padding: 4px 8px; }
+  .tam { width: 100%; }
+  .musteri {
+    display: flex; justify-content: space-between; align-items: center; gap: 10px;
+    padding: 12px; border-radius: 10px; border: 1px solid var(--cizgi); margin-bottom: 8px; cursor: pointer;
+  }
+  .musteri:hover { border-color: var(--altin); }
+  .musteri small { color: var(--soluk); display: block; font-size: 12px; margin-top: 2px; }
+  .rozet { font-size: 11px; padding: 3px 8px; border-radius: 20px; background: var(--altin); color: #1b150c; font-weight: 700; white-space: nowrap; }
+  .rozet.verildi { background: var(--yesil); }
+  .satir { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--cizgi); font-size: 14px; }
+  .satir small { color: var(--soluk); display: block; font-size: 12px; }
+  .ust { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+  .ozet { display: flex; gap: 16px; font-size: 14px; color: var(--soluk); margin-bottom: 12px; flex-wrap: wrap; }
+  .ozet b { color: var(--altin-acik); }
+  .gizli { display: none !important; }
+  .mesaj { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: #2a2216; border: 1px solid var(--altin); padding: 10px 16px; border-radius: 10px; font-size: 14px; }
+  .butonlar { display: flex; gap: 8px; flex-wrap: wrap; }
+  #qrGizli { position: absolute; left: -9999px; }
+</style>
+</head>
+<body>
+<div class="sar">
+  <h1>Yine Bekleriz · Dükkân Paneli</h1>
+
+  <!-- Giriş -->
+  <div id="girisKart" class="kart">
+    <h2>Giriş</h2>
+    <label>Panel şifresi</label>
+    <input id="anahtar" type="password" autocomplete="current-password">
+    <button class="tam" onclick="girisYap()">Giriş yap</button>
+  </div>
+
+  <div id="panel" class="gizli">
+    <!-- Liste -->
+    <div id="listeBolum">
+      <div class="kart">
+        <h2>Yeni müşteri</h2>
+        <div class="izgara">
+          <div><label>Ad Soyad</label><input id="yAd"></div>
+          <div><label>Telefon</label><input id="yTel" inputmode="tel"></div>
+          <div><label>Hedef (ay)</label><input id="yHedef" type="number" min="1" value="12"></div>
+          <div><label>Ödül</label><input id="yOdul" placeholder="örn. işçilik indirimi"></div>
+        </div>
+        <button class="tam" onclick="musteriEkle()">Müşteri ekle</button>
+      </div>
+      <div class="kart">
+        <div class="ust">
+          <h2 style="margin:0">Müşteriler (<span id="sayi">0</span>)</h2>
+          <button class="ikincil" onclick="cikis()">Çıkış</button>
+        </div>
+        <input id="ara" placeholder="İsim veya telefon ara" oninput="listeCiz()">
+        <div id="liste"></div>
+      </div>
+    </div>
+
+    <!-- Detay -->
+    <div id="detayBolum" class="gizli">
+      <div class="kart">
+        <div class="ust">
+          <button class="ikincil" onclick="listeyeDon()">← Liste</button>
+          <div class="butonlar">
+            <button class="ikincil" onclick="kartYazdir()">QR kart yazdır</button>
+            <button class="ikincil" onclick="sayfayiAc()">Müşteri sayfası</button>
+          </div>
+        </div>
+        <h2 id="dAd"></h2>
+        <div class="ozet" id="dOzet"></div>
+        <div id="dOdul"></div>
+      </div>
+      <div class="kart">
+        <h2>Alım ekle</h2>
+        <div class="izgara">
+          <div><label>Ürün</label>
+            <select id="kUrun" onchange="gramHesapla()">
+              <option data-g="1.75">Çeyrek</option>
+              <option data-g="3.50">Yarım</option>
+              <option data-g="7.00">Tam</option>
+              <option data-g="7.20">Ata</option>
+              <option data-g="1">Gram altın</option>
+              <option data-g="">Bilezik</option>
+              <option data-g="">Diğer</option>
+            </select>
+          </div>
+          <div><label>Adet</label><input id="kAdet" type="number" min="1" value="1" oninput="gramHesapla()"></div>
+          <div><label>Toplam gram</label><input id="kGram" type="number" step="0.01" inputmode="decimal"></div>
+          <div><label>Tarih</label><input id="kTarih" type="date"></div>
+        </div>
+        <label>Not (isteğe bağlı)</label>
+        <input id="kNot" placeholder="örn. doğum günü hediyesi">
+        <button class="tam" onclick="kayitEkle()">Kaydet</button>
+      </div>
+      <div class="kart">
+        <h2>Geçmiş</h2>
+        <div id="dKayitlar"></div>
+      </div>
+      <div class="kart">
+        <h2>Ayarlar</h2>
+        <div class="izgara">
+          <div><label>Hedef (ay)</label><input id="aHedef" type="number" min="1"></div>
+          <div><label>Ödül</label><input id="aOdul"></div>
+        </div>
+        <div class="butonlar">
+          <button onclick="ayarKaydet()">Kaydet</button>
+          <button class="sil" onclick="musteriSil()">Müşteriyi sil</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="qrGizli"></div>
+<div id="mesaj" class="mesaj gizli"></div>
+
+<script>
+  // Bu iki adresi kendine göre değiştir
+  const WORKER_URL = "https://yinebekleriz.KULLANICI.workers.dev";
+  const SITE_URL = "https://ufukcicek81.github.io/yinebekleriz/";
+
+  let ANAHTAR = "";
+  let musteriler = [];
+  let secili = null;
+
+  const ayAdlari = ["Oca","Şub","Mar","Nis","May","Haz","Tem","Ağu","Eyl","Eki","Kas","Ara"];
+  const tarihYaz = (t) => { const [y, a, g] = t.split("-"); return `${+g} ${ayAdlari[+a - 1]} ${y}`; };
+  const gramYaz = (g) => Number(g).toLocaleString("tr-TR", { maximumFractionDigits: 2 });
+  const kac = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+  const bugun = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); };
+  const $ = (id) => document.getElementById(id);
+
+  function mesaj(yazi) {
+    const m = $("mesaj"); m.textContent = yazi; m.classList.remove("gizli");
+    clearTimeout(m._t); m._t = setTimeout(() => m.classList.add("gizli"), 2200);
+  }
+
+  async function api(yol, yontem = "GET", govde) {
+    const r = await fetch(WORKER_URL + yol, {
+      method: yontem,
+      headers: { "Content-Type": "application/json", "X-Admin-Key": ANAHTAR },
+      body: govde ? JSON.stringify(govde) : undefined,
+    });
+    const veri = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(veri.hata || "Hata");
+    return veri;
+  }
+
+  async function girisYap(otomatik) {
+    ANAHTAR = otomatik || $("anahtar").value.trim();
+    if (!ANAHTAR) return;
+    try {
+      musteriler = await api("/admin/musteriler");
+      try { localStorage.setItem("birikimAnahtar", ANAHTAR); } catch {}
+      $("girisKart").classList.add("gizli");
+      $("panel").classList.remove("gizli");
+      listeCiz();
+    } catch (e) {
+      try { localStorage.removeItem("birikimAnahtar"); } catch {}
+      if (!otomatik) mesaj(e.message === "Yetkisiz" ? "Şifre yanlış" : "Bağlantı hatası");
+    }
+  }
+
+  function cikis() {
+    try { localStorage.removeItem("birikimAnahtar"); } catch {}
+    location.reload();
+  }
+
+  function listeCiz() {
+    const q = $("ara").value.toLocaleLowerCase("tr");
+    const liste = musteriler.filter((m) => !q || m.ad.toLocaleLowerCase("tr").includes(q) || (m.tel || "").includes(q));
+    $("sayi").textContent = musteriler.length;
+    $("liste").innerHTML = liste.length ? liste.map((m) => `
+      <div class="musteri" onclick="detayAc('${m.id}')">
+        <div>${kac(m.ad)}<small>${m.aySayisi}/${m.hedefAy} ay · ${gramYaz(m.toplamGram)} gr${m.tel ? " · " + kac(m.tel) : ""}</small></div>
+        ${m.hedefTamam ? `<span class="rozet ${m.odulVerildi ? "verildi" : ""}">${m.odulVerildi ? "Ödül verildi" : "Ödül hak etti"}</span>` : ""}
+      </div>`).join("") : '<div style="color:var(--soluk)">Müşteri yok.</div>';
+  }
+
+  async function musteriEkle() {
+    const ad = $("yAd").value.trim();
+    if (!ad) return mesaj("İsim yaz");
+    try {
+      const m = await api("/admin/musteri", "POST", { ad, tel: $("yTel").value, hedefAy: $("yHedef").value, odul: $("yOdul").value });
+      musteriler.push(m);
+      musteriler.sort((a, b) => a.ad.localeCompare(b.ad, "tr"));
+      $("yAd").value = ""; $("yTel").value = ""; $("yOdul").value = "";
+      mesaj("Müşteri eklendi");
+      detayAc(m.id);
+    } catch (e) { mesaj(e.message); }
+  }
+
+  function guncelle(m) {
+    const i = musteriler.findIndex((x) => x.id === m.id);
+    if (i >= 0) musteriler[i] = m; else musteriler.push(m);
+    secili = m;
+  }
+
+  function detayAc(id) {
+    secili = musteriler.find((m) => m.id === id);
+    if (!secili) return;
+    $("listeBolum").classList.add("gizli");
+    $("detayBolum").classList.remove("gizli");
+    $("kTarih").value = bugun();
+    $("kAdet").value = 1; $("kNot").value = "";
+    gramHesapla();
+    detayCiz();
+    window.scrollTo(0, 0);
+  }
+
+  function detayCiz() {
+    const m = secili;
+    $("dAd").textContent = m.ad + (m.tel ? " · " + m.tel : "");
+    $("dOzet").innerHTML = `<span>Toplam: <b>${gramYaz(m.toplamGram)} gr</b></span><span>Ay: <b>${m.aySayisi}/${m.hedefAy}</b></span><span>Seri: <b>${m.seri} ay</b></span>`;
+    if (m.hedefTamam) {
+      $("dOdul").innerHTML = m.odulVerildi
+        ? `<span class="rozet verildi">Ödül verildi</span> <button class="sil" onclick="odulIsaretle(false)">geri al</button>`
+        : `<div class="butonlar"><span class="rozet">Ödül hak etti${m.odul ? ": " + kac(m.odul) : ""}</span><button onclick="odulIsaretle(true)">Ödül verildi</button></div>`;
+    } else {
+      $("dOdul").innerHTML = `<small style="color:var(--soluk)">Hedefe ${m.hedefAy - m.aySayisi} ay kaldı${m.odul ? " · Ödül: " + kac(m.odul) : ""}</small>`;
+    }
+    $("dKayitlar").innerHTML = m.kayitlar.length ? m.kayitlar.map((k) => `
+      <div class="satir">
+        <div>${k.adet > 1 ? k.adet + " × " : ""}${kac(k.urun)} · ${gramYaz(k.gram)} gr<small>${tarihYaz(k.tarih)}${k.not ? " · " + kac(k.not) : ""}</small></div>
+        <button class="sil" onclick="kayitSil('${k.kid}')">Sil</button>
+      </div>`).join("") : '<div style="color:var(--soluk)">Henüz kayıt yok.</div>';
+    $("aHedef").value = m.hedefAy;
+    $("aOdul").value = m.odul || "";
+  }
+
+  function listeyeDon() {
+    $("detayBolum").classList.add("gizli");
+    $("listeBolum").classList.remove("gizli");
+    listeCiz();
+  }
+
+  function gramHesapla() {
+    const s = $("kUrun").selectedOptions[0];
+    const g = parseFloat(s.dataset.g);
+    const adet = Math.max(1, parseInt($("kAdet").value) || 1);
+    $("kGram").value = g ? (g * adet).toFixed(2) : "";
+    if (!g) $("kGram").focus();
+  }
+
+  async function kayitEkle() {
+    const gram = parseFloat(String($("kGram").value).replace(",", "."));
+    if (!(gram > 0)) return mesaj("Gram gir");
+    try {
+      const m = await api("/admin/kayit", "POST", {
+        id: secili.id, urun: $("kUrun").value, adet: $("kAdet").value,
+        gram, tarih: $("kTarih").value, not: $("kNot").value,
+      });
+      guncelle(m); detayCiz();
+      $("kNot").value = "";
+      mesaj(m.hedefTamam && !m.odulVerildi ? "Kaydedildi · Müşteri ödülü hak etti!" : "Kaydedildi");
+    } catch (e) { mesaj(e.message); }
+  }
+
+  async function kayitSil(kid) {
+    if (!confirm("Bu kayıt silinsin mi?")) return;
+    try {
+      const m = await api(`/admin/kayit?id=${secili.id}&kid=${kid}`, "DELETE");
+      guncelle(m); detayCiz(); mesaj("Silindi");
+    } catch (e) { mesaj(e.message); }
+  }
+
+  async function odulIsaretle(durum) {
+    try {
+      const m = await api("/admin/guncelle", "POST", { id: secili.id, odulVerildi: durum });
+      guncelle(m); detayCiz();
+    } catch (e) { mesaj(e.message); }
+  }
+
+  async function ayarKaydet() {
+    try {
+      const m = await api("/admin/guncelle", "POST", { id: secili.id, hedefAy: $("aHedef").value, odul: $("aOdul").value });
+      guncelle(m); detayCiz(); mesaj("Kaydedildi");
+    } catch (e) { mesaj(e.message); }
+  }
+
+  async function musteriSil() {
+    if (!confirm(`${secili.ad} ve tüm kayıtları silinsin mi?`)) return;
+    try {
+      await api(`/admin/musteri?id=${secili.id}`, "DELETE");
+      musteriler = musteriler.filter((m) => m.id !== secili.id);
+      listeyeDon(); mesaj("Müşteri silindi");
+    } catch (e) { mesaj(e.message); }
+  }
+
+  const musteriLinki = () => `${SITE_URL}?id=${secili.id}`;
+  function sayfayiAc() { window.open(musteriLinki(), "_blank"); }
+
+  function kartYazdir() {
+    const kutu = $("qrGizli");
+    kutu.innerHTML = "";
+    new QRCode(kutu, { text: musteriLinki(), width: 300, height: 300, correctLevel: QRCode.CorrectLevel.M });
+    const tuval = kutu.querySelector("canvas");
+    const qr = tuval ? tuval.toDataURL("image/png") : kutu.querySelector("img").src;
+    const p = window.open("", "_blank");
+    if (!p) return mesaj("Açılır pencere engellendi");
+    p.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Yine Bekleriz Kartı</title>
+      <style>
+        @page { size: 85.6mm 54mm; margin: 0; }
+        body { margin: 0; font-family: system-ui, sans-serif; }
+        .kart { width: 85.6mm; height: 54mm; box-sizing: border-box; padding: 4mm 5mm;
+          display: flex; align-items: center; gap: 4mm; background: #14110c; color: #f3ede1;
+          -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        .kart img { width: 34mm; height: 34mm; background: #fff; padding: 1.5mm; border-radius: 2mm; }
+        .dukkan { color: #d4a843; font-size: 8pt; letter-spacing: .15em; text-transform: uppercase; }
+        .baslik { font-size: 12pt; font-weight: 700; margin: 1.5mm 0; }
+        .ad { font-size: 10pt; color: #f0d48a; }
+        .not { font-size: 6.5pt; color: #a99c84; margin-top: 2mm; }
+      </style></head><body>
+      <div class="kart">
+        <img src="${qr}">
+        <div>
+          <div class="dukkan">Asil Kuyumculuk</div>
+          <div class="baslik">Yine Bekleriz</div>
+          <div class="ad">${kac(secili.ad)}</div>
+          <div class="not">Telefonunuzun kamerasıyla okutun, birikiminizi görün.</div>
+        </div>
+      </div>
+      <script>window.onload = () => setTimeout(() => window.print(), 300);<\/script>
+      </body></html>`);
+    p.document.close();
+  }
+
+  // Kayıtlı şifreyle otomatik giriş
+  try { const k = localStorage.getItem("birikimAnahtar"); if (k) girisYap(k); } catch {}
+  $("anahtar").addEventListener("keydown", (e) => { if (e.key === "Enter") girisYap(); });
+</script>
+</body>
+</html>

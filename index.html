@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Yine Bekleriz · Asil Kuyumculuk</title>
+<style>
+  :root {
+    --zemin: #14110c; --kart: #1f1a12; --cizgi: #3a3020;
+    --altin: #d4a843; --altin-acik: #f0d48a; --yazi: #f3ede1; --soluk: #a99c84;
+    --yesil: #6fbf73;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--zemin); color: var(--yazi);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    min-height: 100vh;
+  }
+  .sar { max-width: 460px; margin: 0 auto; padding: 20px 16px 40px; }
+  .dukkan { text-align: center; color: var(--altin); letter-spacing: .18em; font-size: 12px; text-transform: uppercase; }
+  h1 { text-align: center; font-size: 24px; margin: 6px 0 20px; font-weight: 600; }
+  .kart {
+    background: linear-gradient(145deg, #2a2216, var(--kart));
+    border: 1px solid var(--cizgi); border-radius: 18px; padding: 20px; margin-bottom: 14px;
+  }
+  .buyuk { text-align: center; }
+  .buyuk .etiket { color: var(--soluk); font-size: 13px; }
+  .buyuk .deger { font-size: 46px; font-weight: 700; color: var(--altin-acik); line-height: 1.1; margin: 4px 0; }
+  .buyuk .deger small { font-size: 20px; color: var(--altin); font-weight: 500; }
+  .ikili { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
+  .kutu { background: rgba(0,0,0,.25); border-radius: 12px; padding: 10px; text-align: center; }
+  .kutu b { display: block; font-size: 22px; color: var(--yazi); }
+  .kutu span { font-size: 12px; color: var(--soluk); }
+  h2 { font-size: 15px; margin: 0 0 12px; color: var(--altin); font-weight: 600; }
+  .noktalar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .nokta {
+    width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--cizgi);
+    display: grid; place-items: center; font-size: 12px; color: var(--soluk);
+  }
+  .nokta.dolu { background: var(--altin); border-color: var(--altin); color: #2a2216; font-weight: 700; }
+  .odul { font-size: 14px; color: var(--soluk); }
+  .odul b { color: var(--yazi); }
+  .tebrik {
+    background: linear-gradient(135deg, var(--altin), #a37d22); color: #1b150c;
+    border-radius: 14px; padding: 14px; text-align: center; font-weight: 600; margin-top: 12px;
+  }
+  .satir {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 0; border-bottom: 1px solid var(--cizgi); font-size: 14px;
+  }
+  .satir:last-child { border-bottom: 0; }
+  .satir .sol small { display: block; color: var(--soluk); font-size: 12px; margin-top: 2px; }
+  .satir .sag { color: var(--altin-acik); font-weight: 600; white-space: nowrap; }
+  .bos, .hata { text-align: center; color: var(--soluk); padding: 30px 10px; }
+  .alt { text-align: center; color: var(--soluk); font-size: 12px; margin-top: 20px; }
+</style>
+</head>
+<body>
+<div class="sar">
+  <div class="dukkan">Asil Kuyumculuk · Düzce</div>
+  <h1 id="baslik">Yine Bekleriz</h1>
+  <div id="icerik"><div class="bos">Yükleniyor…</div></div>
+  <div class="alt">Bu sayfa sadece bilgi amaçlıdır. Altınlarınız sizdedir.</div>
+</div>
+
+<script>
+  // Worker adresini kendi adresinle değiştir
+  const WORKER_URL = "https://yinebekleriz.KULLANICI.workers.dev";
+
+  const ayAdlari = ["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
+  const tarihYaz = (t) => { const [y, a, g] = t.split("-"); return `${+g} ${ayAdlari[+a - 1]} ${y}`; };
+  const gramYaz = (g) => Number(g).toLocaleString("tr-TR", { maximumFractionDigits: 2 });
+  const kac = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+
+  async function yukle() {
+    const icerik = document.getElementById("icerik");
+    const id = new URLSearchParams(location.search).get("id");
+    if (!id) { icerik.innerHTML = '<div class="hata">Kart bilgisi bulunamadı. Lütfen kartınızdaki QR kodu okutun.</div>'; return; }
+    try {
+      const r = await fetch(`${WORKER_URL}/m/${encodeURIComponent(id)}`);
+      if (!r.ok) throw new Error();
+      const m = await r.json();
+      document.getElementById("baslik").textContent = `Merhaba, ${m.ad}`;
+
+      let noktalar = "";
+      for (let i = 1; i <= m.hedefAy; i++) {
+        noktalar += `<div class="nokta ${i <= m.aySayisi ? "dolu" : ""}">${i}</div>`;
+      }
+      const kalan = Math.max(0, m.hedefAy - m.aySayisi);
+
+      let hedefAlt = "";
+      if (m.hedefTamam && m.odulVerildi) hedefAlt = `<div class="tebrik">Hedefinizi tamamladınız, ödülünüz teslim edildi. Teşekkürler!</div>`;
+      else if (m.hedefTamam) hedefAlt = `<div class="tebrik">🎉 Tebrikler! Hedefinizi tamamladınız.${m.odul ? `<br>Ödülünüz: ${kac(m.odul)}` : ""}<br><small>Dükkânımıza uğrayın.</small></div>`;
+      else hedefAlt = `<div class="odul">Hedefe <b>${kalan} ay</b> kaldı.${m.odul ? ` Ödül: <b>${kac(m.odul)}</b>` : ""}</div>`;
+
+      const kayitlar = m.kayitlar.length
+        ? m.kayitlar.map((k) => `
+            <div class="satir">
+              <div class="sol">${k.adet > 1 ? k.adet + " × " : ""}${kac(k.urun)}<small>${tarihYaz(k.tarih)}${k.not ? " · " + kac(k.not) : ""}</small></div>
+              <div class="sag">${gramYaz(k.gram)} gr</div>
+            </div>`).join("")
+        : '<div class="bos">Henüz kayıt yok.</div>';
+
+      icerik.innerHTML = `
+        <div class="kart buyuk">
+          <div class="etiket">Toplam biriktirdiğiniz</div>
+          <div class="deger">${gramYaz(m.toplamGram)} <small>gram</small></div>
+          <div class="ikili">
+            <div class="kutu"><b>${m.aySayisi}</b><span>ay birikim</span></div>
+            <div class="kutu"><b>${m.seri}</b><span>ay aralıksız</span></div>
+          </div>
+        </div>
+        <div class="kart">
+          <h2>Hedefiniz: ${m.hedefAy} ay</h2>
+          <div class="noktalar">${noktalar}</div>
+          ${hedefAlt}
+        </div>
+        <div class="kart">
+          <h2>Alımlarınız</h2>
+          ${kayitlar}
+        </div>`;
+    } catch {
+      icerik.innerHTML = '<div class="hata">Bilgiler şu an yüklenemedi. Biraz sonra tekrar deneyin.</div>';
+    }
+  }
+  yukle();
+</script>
+</body>
+</html>

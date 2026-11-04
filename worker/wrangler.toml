@@ -1,0 +1,8 @@
+name = "yinebekleriz"
+main = "worker.js"
+compatibility_date = "2026-11-01"
+
+# "wrangler kv namespace create BIRIKIM" komutunun verdiği id'yi buraya yapıştır
+[[kv_namespaces]]
+binding = "BIRIKIM"
+id = "BURAYA_KV_ID"

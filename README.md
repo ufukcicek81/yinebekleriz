@@ -4,7 +4,7 @@ Asil Kuyumculuk'un düzenli altın biriktiren müşterileri için QR kartlı bir
 
 - `index.html` – Müşteri sayfası (QR ile açılır)
 - `admin.html` – Dükkân paneli (müşteri ekle, alım kaydet, QR kart yazdır)
-- `worker/` – Cloudflare Worker (veriler Cloudflare KV'de)
+- `worker/worker.js` + `wrangler.toml` – Cloudflare Worker (veriler Cloudflare KV'de). Cloudflare GitHub'a bağlı: repoya yüklenen her değişiklik otomatik yayına çıkar.
 
 ## Kurulum
 

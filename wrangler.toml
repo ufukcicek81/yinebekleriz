@@ -1,8 +1,8 @@
 name = "yinebekleriz"
-main = "worker.js"
+main = "worker/worker.js"
 compatibility_date = "2026-11-01"
 
-# "wrangler kv namespace create BIRIKIM" komutunun verdiği id'yi buraya yapıştır
+# Cloudflare KV deposu (BIRIKIM)
 [[kv_namespaces]]
 binding = "BIRIKIM"
 id = "f061200e8d974689bd2ae9bbe8e9f524"

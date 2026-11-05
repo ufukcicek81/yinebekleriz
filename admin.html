@@ -160,17 +160,22 @@
 
   function mesaj(yazi) {
     const m = $("mesaj"); m.textContent = yazi; m.classList.remove("gizli");
-    clearTimeout(m._t); m._t = setTimeout(() => m.classList.add("gizli"), 2500);
+    clearTimeout(m._t); m._t = setTimeout(() => m.classList.add("gizli"), 6000);
   }
 
   async function api(yol, yontem = "GET", govde) {
-    const r = await fetch(WORKER_URL + yol, {
-      method: yontem, cache: "no-store",
-      headers: { "Content-Type": "application/json", "X-Admin-Key": ANAHTAR },
-      body: govde ? JSON.stringify(govde) : undefined,
-    });
+    let r;
+    try {
+      r = await fetch(WORKER_URL + yol, {
+        method: yontem, cache: "no-store",
+        headers: { "Content-Type": "application/json", "X-Admin-Key": ANAHTAR },
+        body: govde ? JSON.stringify(govde) : undefined,
+      });
+    } catch {
+      throw new Error("Sunucuya ulaşılamadı (Worker kapalı ya da adres yanlış)");
+    }
     const veri = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error(veri.hata || "Bağlantı hatası");
+    if (!r.ok) throw new Error(veri.hata || `Sunucu hatası (${r.status})`);
     return veri;
   }
 
@@ -203,7 +208,7 @@
       yoklama = setInterval(() => durumYukle(false).catch(() => {}), 5000);
     } catch (e) {
       try { localStorage.removeItem("ybPanel"); } catch {}
-      if (!otomatik) mesaj(e.message === "Yetkisiz" ? "Şifre yanlış" : "Bağlantı hatası");
+      if (!otomatik) mesaj(e.message === "Yetkisiz" ? "Şifre yanlış" : e.message);
     }
   }
 

@@ -1,6 +1,7 @@
 name = "yinebekleriz"
 main = "worker/worker.js"
 compatibility_date = "2026-11-01"
+workers_dev = true
 
 # Cloudflare KV deposu (BIRIKIM)
 [[kv_namespaces]]

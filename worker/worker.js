@@ -125,6 +125,10 @@ export default {
 
     // ================= MÜŞTERİ TARAFI =================
 
+    if (req.method === "GET" && yol === "/") {
+      return json({ uygulama: "Yine Bekleriz", durum: "çalışıyor" });
+    }
+
     if (req.method === "GET" && yol === "/ayarlar") {
       return json({ dukkan: a.dukkan, hedef: a.hedef, oduller: a.oduller });
     }

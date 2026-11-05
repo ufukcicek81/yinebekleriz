@@ -205,7 +205,7 @@
       $("girisKart").classList.add("gizli");
       $("panel").classList.remove("gizli");
       clearInterval(yoklama);
-      yoklama = setInterval(() => durumYukle(false).catch(() => {}), 5000);
+      yoklama = setInterval(() => durumYukle(false).catch(() => {}), 3000);
     } catch (e) {
       try { localStorage.removeItem("ybPanel"); } catch {}
       if (!otomatik) mesaj(e.message === "Yetkisiz" ? "Şifre yanlış" : e.message);

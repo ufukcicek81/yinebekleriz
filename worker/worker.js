@@ -1,5 +1,7 @@
 // Yine Bekleriz - Asil Kuyumculuk sadakat (damga/ödül) Worker'ı
-// Gerekenler: KV namespace "BIRIKIM" ve gizli anahtar "ADMIN_KEY"
+// Gerekenler: D1 veritabanı "DB" (önerilen) ya da KV namespace "BIRIKIM", ve gizli anahtar "ADMIN_KEY".
+// D1 bağlıysa veriler D1'de tutulur: okumalar hep güncel olduğu için onaylar anında görünür.
+// D1 yoksa KV kullanılır (KV okumaları 1 dakikaya kadar gecikebilir).
 //
 // Akış: Müşteri tezgâhtaki QR'ı okutur -> damga isteği düşer ->
 // dükkân panelden onaylar -> damga eklenir. Hedef sayıya ulaşınca ödül açılır,
@@ -105,8 +107,36 @@ function yeniMusteri(ad, tel) {
   };
 }
 
+// D1'i KV gibi kullanmak için küçük bir katman (tek tablo: anahtar -> değer)
+let d1Hazir = null;
+function d1Depo(db) {
+  const hazirla = () =>
+    (d1Hazir ??= db.prepare("CREATE TABLE IF NOT EXISTS kv (k TEXT PRIMARY KEY, v TEXT NOT NULL)").run());
+  return {
+    async get(k) {
+      await hazirla();
+      const r = await db.prepare("SELECT v FROM kv WHERE k = ?").bind(k).first();
+      return r ? r.v : null;
+    },
+    async put(k, v) {
+      await hazirla();
+      await db.prepare("INSERT INTO kv (k, v) VALUES (?, ?) ON CONFLICT(k) DO UPDATE SET v = excluded.v").bind(k, v).run();
+    },
+    async delete(k) {
+      await hazirla();
+      await db.prepare("DELETE FROM kv WHERE k = ?").bind(k).run();
+    },
+    async list({ prefix }) {
+      await hazirla();
+      const r = await db.prepare("SELECT k FROM kv WHERE k >= ? AND k < ? ORDER BY k").bind(prefix, prefix + "\uffff").all();
+      return { keys: r.results.map((x) => ({ name: x.k })), list_complete: true };
+    },
+  };
+}
+
 export default {
   async fetch(req, env) {
+    env = { ...env, BIRIKIM: env.DB ? d1Depo(env.DB) : env.BIRIKIM };
     if (req.method === "OPTIONS") return new Response(null, { headers: CORS });
 
     const url = new URL(req.url);
@@ -126,7 +156,7 @@ export default {
     // ================= MÜŞTERİ TARAFI =================
 
     if (req.method === "GET" && yol === "/") {
-      return json({ uygulama: "Yine Bekleriz", durum: "çalışıyor" });
+      return json({ uygulama: "Yine Bekleriz", durum: "çalışıyor", depo: env.DB ? "D1" : "KV" });
     }
 
     if (req.method === "GET" && yol === "/ayarlar") {

@@ -67,12 +67,6 @@
     border-radius: 18px; padding: 20px; text-align: center; margin-bottom: 14px;
   }
   .hazir .buyuk { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
-  .bekliyor {
-    border: 1px solid var(--altin); border-radius: 14px; padding: 14px; text-align: center;
-    color: var(--altin-acik); margin-bottom: 14px; font-size: 15px;
-  }
-  .nokta { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--altin); margin-right: 8px; animation: yanip 1s infinite; }
-  @keyframes yanip { 50% { opacity: .2; } }
   .bildirim {
     background: #20321f; border: 1px solid #6fbf73; color: #cfeccf; border-radius: 14px;
     padding: 14px; text-align: center; margin-bottom: 14px; font-weight: 600;
@@ -103,7 +97,6 @@
   if (tezgahtan) history.replaceState(null, "", location.pathname);
 
   let kartim = null;
-  let takip = null;
   let bildirim = "";
 
   async function api(yol, govde) {
@@ -139,7 +132,7 @@
         const k = await api("/kayit", { ad: $("ad").value, tel: $("tel").value, onay: $("onay").checked });
         sakla(k.id);
         kartim = k;
-        if (tezgahtan) await istekGonder(); else kartCiz();
+        if (tezgahtan) await damgaAl(); else kartCiz();
       } catch (e) { $("hata").textContent = e.message; b.disabled = false; }
     };
   }
@@ -162,7 +155,6 @@
     $("icerik").innerHTML = `
       ${bildirim ? `<div class="bildirim">${bildirim}</div>` : ""}
       ${k.odulHazir ? `<div class="hazir"><div class="buyuk">🎉 Ödülünüz hazır!</div>Bu alışverişinizde aşağıdaki indirimlerden yararlanın. Bu ekranı kasaya gösterin.</div>` : ""}
-      ${k.bekliyor ? `<div class="bekliyor"><span class="nokta"></span>Onay bekleniyor. Kasaya adınızı söyleyin.</div>` : ""}
       <div class="kart">
         <h2>Damgalarınız</h2>
         <div class="damgalar">${damgalar}</div>
@@ -172,41 +164,24 @@
         <h2>${k.odulHazir ? "Kazandığınız indirimler" : `${k.hedef} damgada kazanacaklarınız`}</h2>
         ${odulListe}
       </div>
-      ${!k.bekliyor ? `<button id="istek">${k.odulHazir ? "Ödülümü kullanmak istiyorum" : "Dükkândayım, damgamı iste"}</button>` : ""}
-      <div class="kucuk">${k.toplamGelis ? `Toplam ${k.toplamGelis} geliş` : ""}${k.odulSayisi ? ` · ${k.odulSayisi} ödül kullanıldı` : ""}</div>
+      <div class="kucuk">Damga almak için her gelişinizde dükkândaki QR'ı okutun.<br>${k.toplamGelis ? `Toplam ${k.toplamGelis} geliş` : ""}${k.odulSayisi ? ` · ${k.odulSayisi} ödül kullanıldı` : ""}</div>
       <div style="text-align:center"><button class="link" id="cikis">Bu kart benim değil</button></div>`;
 
-    const b = $("istek");
-    if (b) b.onclick = istekGonder;
-    $("cikis").onclick = () => { sakla(null); kartim = null; bildirim = ""; clearInterval(takip); kayitEkrani(); };
-    takibiAyarla();
+    $("cikis").onclick = () => { sakla(null); kartim = null; bildirim = ""; kayitEkrani(); };
   }
 
-  async function istekGonder() {
-    const b = $("istek"); if (b) b.disabled = true;
+  // Tezgâh QR'ı okutulunca damga hemen eklenir (günde bir kez)
+  async function damgaAl() {
     try {
-      kartim = await api(`/m/${kartim.id}/istek`, {});
-      bildirim = "";
-    } catch (e) { bildirim = ""; }
+      const k = await api(`/m/${kartim.id}/istek`, {});
+      kartim = k;
+      if (k.sonuc === "eklendi") {
+        bildirim = k.odulHazir ? "Damganız eklendi! 🎉 Ödülünüzü kazandınız." : "Damganız eklendi! Teşekkür ederiz.";
+        return kartCiz(k.damga - 1);
+      }
+      bildirim = k.sonuc === "zaten" ? "Bugünkü damganız zaten alındı. Yarın tekrar bekleriz!" : "";
+    } catch { bildirim = ""; }
     kartCiz();
-  }
-
-  // Onay beklerken birkaç saniyede bir kontrol et
-  function takibiAyarla() {
-    clearInterval(takip);
-    if (!kartim || !kartim.bekliyor) return;
-    takip = setInterval(async () => {
-      try {
-        const k = await api(`/m/${kartim.id}`);
-        if (k.bekliyor) return;
-        const eski = kartim;
-        kartim = k;
-        if (k.damga > eski.damga) bildirim = "Damganız eklendi! Teşekkür ederiz.";
-        else if (eski.odulHazir && !k.odulHazir) bildirim = "Ödülünüz kullanıldı. Yeni damgalar sizi bekliyor!";
-        else bildirim = "";
-        kartCiz(k.damga > eski.damga ? k.damga - 1 : -1);
-      } catch {}
-    }, 4000);
   }
 
   async function basla() {
@@ -214,7 +189,7 @@
     if (!id) return kayitEkrani();
     try {
       kartim = await api(`/m/${id}`);
-      if (tezgahtan && !kartim.bekliyor) await istekGonder(); else kartCiz();
+      if (tezgahtan) await damgaAl(); else kartCiz();
     } catch (e) {
       if (e.durum === 404) { sakla(null); return kayitEkrani(); }
       $("icerik").innerHTML = '<div class="durum">Bağlantı kurulamadı. Biraz sonra tekrar deneyin.</div>';

@@ -1,9 +1,8 @@
 // Yine Bekleriz - Asil Kuyumculuk sadakat (damga/ödül) Worker'ı
 // Gerekenler: KV namespace "BIRIKIM" ve gizli anahtar "ADMIN_KEY"
 //
-// Akış: Müşteri tezgâhtaki QR'ı okutur -> damga isteği düşer ->
-// dükkân panelden onaylar -> damga eklenir. Hedef sayıya ulaşınca ödül açılır,
-// ödül kullanılınca damgalar sıfırlanır.
+// Akış: Müşteri tezgâhtaki QR'ı okutur -> damga hemen eklenir (günde en fazla 1).
+// Hedef sayıya ulaşınca ödül açılır; dükkân ödülü kullandırınca damgalar sıfırlanır.
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -21,7 +20,7 @@ const VARSAYILAN = {
   ],
 };
 
-const BEKLEME_SURESI = 12 * 60 * 60 * 1000; // 12 saatten eski istekler düşer
+const GUN = 24 * 60 * 60 * 1000;
 
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -37,6 +36,8 @@ function yeniId(uzunluk = 12) {
 }
 
 const telNorm = (t) => String(t || "").replace(/\D/g, "").slice(-10);
+// Türkiye saatine göre bugünün tarihi (YYYY-AA-GG)
+const bugunTR = () => new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
 async function ayarlarGetir(env) {
   const v = await env.BIRIKIM.get("ayarlar");
@@ -54,20 +55,15 @@ async function musteriKaydet(env, m) {
   await env.BIRIKIM.put("k:" + m.id, JSON.stringify(m));
 }
 
-async function bekleyenGetir(env) {
-  const v = await env.BIRIKIM.get("bekleyen");
-  const liste = v ? JSON.parse(v) : [];
-  const sinir = Date.now() - BEKLEME_SURESI;
-  return liste.filter((b) => b.zaman > sinir);
+// Son 24 saatte gelenler (panelde "Bugün gelenler")
+async function gelenlerGetir(env) {
+  const v = await env.BIRIKIM.get("gelenler");
+  const sinir = Date.now() - GUN;
+  return (v ? JSON.parse(v) : []).filter((g) => g.zaman > sinir);
 }
 
-async function bekleyenKaydet(env, liste) {
-  await env.BIRIKIM.put("bekleyen", JSON.stringify(liste));
-}
-
-async function bekleyendenCikar(env, id) {
-  const liste = await bekleyenGetir(env);
-  await bekleyenKaydet(env, liste.filter((b) => b.id !== id));
+async function gelenlerKaydet(env, liste) {
+  await env.BIRIKIM.put("gelenler", JSON.stringify(liste.slice(-300)));
 }
 
 // Müşteriye gösterilen kart (telefon yok)
@@ -82,7 +78,7 @@ function kart(m, a) {
     dukkan: a.dukkan,
     toplamGelis: m.toplamGelis || 0,
     odulSayisi: m.odulSayisi || 0,
-    bekliyor: !!(m.bekliyor && m.bekliyor > Date.now() - BEKLEME_SURESI),
+    bugunAldi: m.sonDamgaGunu === bugunTR(),
   };
 }
 
@@ -99,7 +95,7 @@ function yeniMusteri(ad, tel) {
     damga: 0,
     toplamGelis: 0,
     odulSayisi: 0,
-    bekliyor: null,
+    sonDamgaGunu: null,
     olusturma: new Date().toISOString(),
     gecmis: [{ t: new Date().toISOString(), tur: "kayit" }],
   };
@@ -158,17 +154,24 @@ export default {
 
       if (req.method === "GET" && !kartEslesme[2]) return json(kart(m, a));
 
-      // Damga isteği (tezgâhta QR okutunca)
+      // Tezgâh QR'ı okutuldu: damga hemen eklenir, günde en fazla bir kez
       if (req.method === "POST" && kartEslesme[2]) {
-        const simdi = Date.now();
-        if (!(m.bekliyor && m.bekliyor > simdi - BEKLEME_SURESI)) {
-          m.bekliyor = simdi;
-          await musteriKaydet(env, m);
-          const liste = (await bekleyenGetir(env)).filter((b) => b.id !== m.id);
-          liste.push({ id: m.id, zaman: simdi });
-          await bekleyenKaydet(env, liste);
-        }
-        return json(kart(m, a));
+        const bugun = bugunTR();
+        if (m.sonDamgaGunu === bugun) return json({ ...kart(m, a), sonuc: "zaten" });
+
+        const odulHazirdi = m.damga >= a.hedef;
+        if (!odulHazirdi) m.damga++;
+        m.toplamGelis = (m.toplamGelis || 0) + 1;
+        m.sonDamgaGunu = bugun;
+        const t = new Date().toISOString();
+        m.gecmis.push({ t, tur: odulHazirdi ? "gelis" : "damga" });
+        await musteriKaydet(env, m);
+
+        const liste = await gelenlerGetir(env);
+        liste.push({ id: m.id, zaman: Date.now(), damgaEklendi: !odulHazirdi });
+        await gelenlerKaydet(env, liste);
+
+        return json({ ...kart(m, a), sonuc: odulHazirdi ? "odulHazir" : "eklendi" });
       }
     }
 
@@ -179,16 +182,15 @@ export default {
       return json({ hata: "Yetkisiz" }, 401);
     }
 
-    // Bekleyen istekler + ayarlar (panel bunu birkaç saniyede bir sorar)
+    // Son 24 saatte gelenler + ayarlar (panel bunu birkaç saniyede bir sorar)
     if (req.method === "GET" && yol === "/admin/durum") {
-      const liste = await bekleyenGetir(env);
-      const bekleyen = [];
-      for (const b of liste) {
-        const m = await musteriGetir(env, b.id);
-        if (m) bekleyen.push({ ...panelKart(m, a), zaman: b.zaman });
+      const liste = await gelenlerGetir(env);
+      const gelenler = [];
+      for (const g of [...liste].reverse()) {
+        const m = await musteriGetir(env, g.id);
+        if (m) gelenler.push({ ...panelKart(m, a), zaman: g.zaman, damgaEklendi: g.damgaEklendi });
       }
-      bekleyen.sort((x, y) => x.zaman - y.zaman);
-      return json({ bekleyen, ayarlar: a });
+      return json({ gelenler, ayarlar: a });
     }
 
     if (req.method === "GET" && yol === "/admin/musteriler") {
@@ -239,33 +241,36 @@ export default {
       if (m) {
         await env.BIRIKIM.delete("k:" + m.id);
         await env.BIRIKIM.delete("t:" + m.tel);
-        await bekleyendenCikar(env, m.id);
+        await gelenlerKaydet(env, (await gelenlerGetir(env)).filter((g) => g.id !== m.id));
       }
       return json({ tamam: true });
     }
 
-    // Buradan sonrakiler tek müşteri üzerinde işlem
-    const islemler = ["/admin/onay", "/admin/reddet", "/admin/damga", "/admin/odul"];
+    // Tek müşteri üzerinde işlemler
+    const islemler = ["/admin/geri-al", "/admin/damga", "/admin/odul"];
     if (req.method === "POST" && islemler.includes(yol)) {
       const m = await musteriGetir(env, govde.id);
       if (!m) return json({ hata: "Müşteri yok" }, 404);
       const t = new Date().toISOString();
 
-      if (yol === "/admin/onay") {
-        // Ödül hazırsa damga birikmez, ama geliş sayılır
-        if (m.damga < a.hedef) m.damga++;
-        m.toplamGelis = (m.toplamGelis || 0) + 1;
-        m.gecmis.push({ t, tur: "damga" });
-      } else if (yol === "/admin/reddet") {
-        m.gecmis.push({ t, tur: "red" });
+      if (yol === "/admin/geri-al") {
+        // Bugünkü okutmayı geri al (alışveriş yapmadan okuttuysa)
+        const liste = await gelenlerGetir(env);
+        const i = liste.map((g) => g.id).lastIndexOf(m.id);
+        if (i < 0) return json({ hata: "Bugün okutma yok" }, 400);
+        const [g] = liste.splice(i, 1);
+        await gelenlerKaydet(env, liste);
+        if (g.damgaEklendi && m.damga > 0) m.damga--;
+        m.toplamGelis = Math.max(0, (m.toplamGelis || 0) - 1);
+        m.sonDamgaGunu = null;
+        m.gecmis.push({ t, tur: "geri" });
       } else if (yol === "/admin/damga") {
         // Elle düzeltme: +1 / -1
         const fark = Number(govde.fark) > 0 ? 1 : -1;
         const once = m.damga;
         m.damga = Math.min(a.hedef, Math.max(0, m.damga + fark));
         if (m.damga !== once) {
-          if (fark > 0) m.toplamGelis = (m.toplamGelis || 0) + 1;
-          else m.toplamGelis = Math.max(0, (m.toplamGelis || 0) - 1);
+          m.toplamGelis = Math.max(0, (m.toplamGelis || 0) + fark);
           m.gecmis.push({ t, tur: fark > 0 ? "elle+" : "elle-" });
         }
       } else if (yol === "/admin/odul") {
@@ -275,11 +280,6 @@ export default {
         m.gecmis.push({ t, tur: "odul" });
       }
 
-      // Onay, red veya ödül kullanımı bekleyen isteği kapatır
-      if (yol !== "/admin/damga") {
-        m.bekliyor = null;
-        await bekleyendenCikar(env, m.id);
-      }
       await musteriKaydet(env, m);
       return json(panelKart(m, a));
     }

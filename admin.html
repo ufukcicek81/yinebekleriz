@@ -13,349 +13,406 @@
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--zemin); color: var(--yazi); font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-  .sar { max-width: 640px; margin: 0 auto; padding: 16px 16px 60px; }
-  h1 { font-size: 20px; color: var(--altin); margin: 4px 0 16px; }
+  .sar { max-width: 720px; margin: 0 auto; padding: 16px 16px 60px; }
+  h1 { font-size: 20px; color: var(--altin); margin: 4px 0 14px; }
   h2 { font-size: 16px; margin: 0 0 12px; color: var(--altin-acik); }
   .kart { background: var(--kart); border: 1px solid var(--cizgi); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
   input, select, button { font: inherit; }
   input, select {
     width: 100%; padding: 11px 12px; border-radius: 10px; border: 1px solid var(--cizgi);
-    background: #0f0c08; color: var(--yazi); margin-bottom: 10px;
+    background: #0f0c08; color: var(--yazi);
   }
   label { font-size: 12px; color: var(--soluk); display: block; margin-bottom: 4px; }
-  .izgara { display: grid; grid-template-columns: 1fr 1fr; gap: 0 10px; }
   button {
-    padding: 11px 14px; border-radius: 10px; border: 0; cursor: pointer;
-    background: var(--altin); color: #1b150c; font-weight: 600;
+    padding: 10px 14px; border-radius: 10px; border: 0; cursor: pointer;
+    background: var(--altin); color: #1b150c; font-weight: 600; white-space: nowrap;
   }
   button.ikincil { background: transparent; color: var(--altin); border: 1px solid var(--altin); }
-  button.sil { background: transparent; color: var(--kirmizi); border: 0; padding: 4px 8px; }
+  button.yesil { background: var(--yesil); color: #0f1a0f; }
+  button.sil { background: transparent; color: var(--kirmizi); border: 1px solid #5a2e2a; }
+  button:disabled { opacity: .5; cursor: default; }
   .tam { width: 100%; }
-  .musteri {
-    display: flex; justify-content: space-between; align-items: center; gap: 10px;
-    padding: 12px; border-radius: 10px; border: 1px solid var(--cizgi); margin-bottom: 8px; cursor: pointer;
-  }
-  .musteri:hover { border-color: var(--altin); }
-  .musteri small { color: var(--soluk); display: block; font-size: 12px; margin-top: 2px; }
-  .rozet { font-size: 11px; padding: 3px 8px; border-radius: 20px; background: var(--altin); color: #1b150c; font-weight: 700; white-space: nowrap; }
-  .rozet.verildi { background: var(--yesil); }
-  .satir { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--cizgi); font-size: 14px; }
-  .satir small { color: var(--soluk); display: block; font-size: 12px; }
-  .ust { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
-  .ozet { display: flex; gap: 16px; font-size: 14px; color: var(--soluk); margin-bottom: 12px; flex-wrap: wrap; }
-  .ozet b { color: var(--altin-acik); }
   .gizli { display: none !important; }
-  .mesaj { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: #2a2216; border: 1px solid var(--altin); padding: 10px 16px; border-radius: 10px; font-size: 14px; }
-  .butonlar { display: flex; gap: 8px; flex-wrap: wrap; }
-  #qrGizli { position: absolute; left: -9999px; }
+
+  .sekmeler { display: flex; gap: 6px; margin-bottom: 14px; overflow-x: auto; }
+  .sekme { background: transparent; color: var(--soluk); border: 1px solid var(--cizgi); }
+  .sekme.aktif { background: var(--altin); color: #1b150c; border-color: var(--altin); }
+  .rozet-sayi { display: inline-block; min-width: 20px; padding: 0 6px; border-radius: 10px; background: var(--kirmizi); color: #fff; font-size: 12px; margin-left: 4px; }
+
+  .satir { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--cizgi); flex-wrap: wrap; }
+  .satir:last-child { border-bottom: 0; }
+  .satir .bilgi { min-width: 0; flex: 1 1 200px; }
+  .satir .ad { font-weight: 600; }
+  .satir small { color: var(--soluk); display: block; font-size: 12px; margin-top: 2px; }
+  .butonlar { display: flex; gap: 6px; flex-wrap: wrap; }
+  .etiket { font-size: 11px; padding: 3px 8px; border-radius: 20px; background: var(--altin); color: #1b150c; font-weight: 700; white-space: nowrap; }
+  .mini-damga { display: inline-flex; gap: 3px; vertical-align: middle; margin-right: 6px; }
+  .mini-damga i { width: 10px; height: 10px; border-radius: 50%; border: 1px solid var(--altin); display: inline-block; }
+  .mini-damga i.d { background: var(--altin); }
+  .bos { color: var(--soluk); padding: 20px 0; text-align: center; }
+
+  .izgara { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+  .odul-satir { display: grid; grid-template-columns: 1fr 80px 100px auto; gap: 8px; margin-bottom: 8px; align-items: center; }
+  @media (max-width: 520px) { .odul-satir { grid-template-columns: 1fr 70px 80px auto; } .izgara { grid-template-columns: 1fr; } }
+  .detay { background: #17130d; border: 1px solid var(--cizgi); border-radius: 10px; padding: 12px; margin: 4px 0 10px; width: 100%; }
+  .gecmis { font-size: 12px; color: var(--soluk); margin-top: 10px; max-height: 160px; overflow: auto; }
+  .ipucu { font-size: 13px; color: var(--soluk); margin: 0 0 12px; }
+  .qr-onizleme { display: flex; justify-content: center; background: #fff; padding: 14px; border-radius: 12px; width: fit-content; margin: 0 auto 12px; }
+  .mesaj { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: #2a2216; border: 1px solid var(--altin); padding: 10px 16px; border-radius: 10px; font-size: 14px; z-index: 10; }
 </style>
 </head>
 <body>
 <div class="sar">
   <h1>Yine Bekleriz · Dükkân Paneli</h1>
 
-  <!-- Giriş -->
   <div id="girisKart" class="kart">
     <h2>Giriş</h2>
-    <label>Panel şifresi</label>
-    <input id="anahtar" type="password" autocomplete="current-password">
-    <button class="tam" onclick="girisYap()">Giriş yap</button>
+    <label for="anahtar">Panel şifresi</label>
+    <input id="anahtar" type="password" autocomplete="current-password" style="margin-bottom:10px">
+    <button class="tam" id="girisBtn">Giriş yap</button>
   </div>
 
   <div id="panel" class="gizli">
-    <!-- Liste -->
-    <div id="listeBolum">
+    <div class="sekmeler">
+      <button class="sekme aktif" data-s="bekleyen">Bekleyenler<span id="bekleyenSayi"></span></button>
+      <button class="sekme" data-s="musteriler">Müşteriler</button>
+      <button class="sekme" data-s="ayarlar">Ödül ayarları</button>
+      <button class="sekme" data-s="qr">Tezgâh QR</button>
+      <button class="sekme" id="cikisBtn" style="margin-left:auto">Çıkış</button>
+    </div>
+
+    <!-- Bekleyenler -->
+    <div id="s-bekleyen" class="kart">
+      <h2>Damga bekleyenler</h2>
+      <p class="ipucu">Müşteri tezgâhtaki QR'ı okutunca burada görünür. Alışverişini yaptıysa onaylayın.</p>
+      <div id="bekleyenListe"><div class="bos">Yükleniyor…</div></div>
+    </div>
+
+    <!-- Müşteriler -->
+    <div id="s-musteriler" class="gizli">
       <div class="kart">
-        <h2>Yeni müşteri</h2>
+        <h2>Elle müşteri ekle</h2>
+        <p class="ipucu">Telefonu olmayan ya da QR okutamayan müşteriler için.</p>
         <div class="izgara">
           <div><label>Ad Soyad</label><input id="yAd"></div>
-          <div><label>Telefon</label><input id="yTel" inputmode="tel"></div>
-          <div><label>Hedef (ay)</label><input id="yHedef" type="number" min="1" value="12"></div>
-          <div><label>Ödül</label><input id="yOdul" placeholder="örn. işçilik indirimi"></div>
+          <div><label>Telefon</label><input id="yTel" inputmode="tel" placeholder="5xx xxx xx xx"></div>
         </div>
-        <button class="tam" onclick="musteriEkle()">Müşteri ekle</button>
+        <button class="tam" id="ekleBtn">Ekle</button>
       </div>
       <div class="kart">
-        <div class="ust">
-          <h2 style="margin:0">Müşteriler (<span id="sayi">0</span>)</h2>
-          <button class="ikincil" onclick="cikis()">Çıkış</button>
-        </div>
-        <input id="ara" placeholder="İsim veya telefon ara" oninput="listeCiz()">
-        <div id="liste"></div>
+        <h2>Müşteriler (<span id="musteriSayi">0</span>)</h2>
+        <input id="ara" placeholder="İsim veya telefon ara" style="margin-bottom:8px">
+        <div id="musteriListe"></div>
       </div>
     </div>
 
-    <!-- Detay -->
-    <div id="detayBolum" class="gizli">
-      <div class="kart">
-        <div class="ust">
-          <button class="ikincil" onclick="listeyeDon()">← Liste</button>
-          <div class="butonlar">
-            <button class="ikincil" onclick="kartYazdir()">QR kart yazdır</button>
-            <button class="ikincil" onclick="sayfayiAc()">Müşteri sayfası</button>
-          </div>
-        </div>
-        <h2 id="dAd"></h2>
-        <div class="ozet" id="dOzet"></div>
-        <div id="dOdul"></div>
+    <!-- Ayarlar -->
+    <div id="s-ayarlar" class="kart gizli">
+      <h2>Ödül ayarları</h2>
+      <div class="izgara">
+        <div><label>Dükkân adı</label><input id="aDukkan"></div>
+        <div><label>Kaç gelişte ödül?</label><input id="aHedef" type="number" min="1" max="50"></div>
       </div>
-      <div class="kart">
-        <h2>Alım ekle</h2>
-        <div class="izgara">
-          <div><label>Ürün</label>
-            <select id="kUrun" onchange="gramHesapla()">
-              <option data-g="1.75">Çeyrek</option>
-              <option data-g="3.50">Yarım</option>
-              <option data-g="7.00">Tam</option>
-              <option data-g="7.20">Ata</option>
-              <option data-g="1">Gram altın</option>
-              <option data-g="">Bilezik</option>
-              <option data-g="">Diğer</option>
-            </select>
-          </div>
-          <div><label>Adet</label><input id="kAdet" type="number" min="1" value="1" oninput="gramHesapla()"></div>
-          <div><label>Toplam gram</label><input id="kGram" type="number" step="0.01" inputmode="decimal"></div>
-          <div><label>Tarih</label><input id="kTarih" type="date"></div>
-        </div>
-        <label>Not (isteğe bağlı)</label>
-        <input id="kNot" placeholder="örn. doğum günü hediyesi">
-        <button class="tam" onclick="kayitEkle()">Kaydet</button>
+      <label>Ödüller (hedefe ulaşan müşteri bir sonraki alışverişinde bunlardan yararlanır)</label>
+      <div id="odulSatirlari"></div>
+      <div class="butonlar" style="margin-top:6px">
+        <button class="ikincil" id="odulEkleBtn">+ Ödül ekle</button>
+        <button id="ayarKaydetBtn">Kaydet</button>
       </div>
-      <div class="kart">
-        <h2>Geçmiş</h2>
-        <div id="dKayitlar"></div>
-      </div>
-      <div class="kart">
-        <h2>Ayarlar</h2>
-        <div class="izgara">
-          <div><label>Hedef (ay)</label><input id="aHedef" type="number" min="1"></div>
-          <div><label>Ödül</label><input id="aOdul"></div>
-        </div>
-        <div class="butonlar">
-          <button onclick="ayarKaydet()">Kaydet</button>
-          <button class="sil" onclick="musteriSil()">Müşteriyi sil</button>
-        </div>
+    </div>
+
+    <!-- QR -->
+    <div id="s-qr" class="kart gizli">
+      <h2>Tezgâh QR</h2>
+      <p class="ipucu">Bu QR herkes için aynıdır. Yazdırıp tezgâha koyun. Müşteri okutunca ilk seferde adını ve telefonunu yazar, sonraki gelişlerinde sadece okutur.</p>
+      <div class="qr-onizleme" id="qrOnizleme"></div>
+      <div class="butonlar" style="justify-content:center">
+        <button id="afisBtn">Afişi yazdır (A5)</button>
+        <button class="ikincil" id="testBtn">Müşteri sayfasını aç</button>
       </div>
     </div>
   </div>
 </div>
-<div id="qrGizli"></div>
 <div id="mesaj" class="mesaj gizli"></div>
 
 <script>
-  // Bu iki adresi kendine göre değiştir
   const WORKER_URL = "https://yinebekleriz.ufuk87900.workers.dev";
   const SITE_URL = "https://ufukcicek81.github.io/yinebekleriz/";
+  const QR_URL = SITE_URL + "?tezgah=1";
 
   let ANAHTAR = "";
+  let ayarlar = { dukkan: "Asil Kuyumculuk", hedef: 5, oduller: [] };
   let musteriler = [];
-  let secili = null;
+  let acikDetay = null;
+  let sonBekleyenSayisi = 0;
+  let yoklama = null;
 
-  const ayAdlari = ["Oca","Şub","Mar","Nis","May","Haz","Tem","Ağu","Eyl","Eki","Kas","Ara"];
-  const tarihYaz = (t) => { const [y, a, g] = t.split("-"); return `${+g} ${ayAdlari[+a - 1]} ${y}`; };
-  const gramYaz = (g) => Number(g).toLocaleString("tr-TR", { maximumFractionDigits: 2 });
-  const kac = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
-  const bugun = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); };
   const $ = (id) => document.getElementById(id);
+  const kac = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+  const telYaz = (t) => t && t.length === 10 ? `0${t.slice(0,3)} ${t.slice(3,6)} ${t.slice(6,8)} ${t.slice(8)}` : (t || "");
+  const odulYaz = (o) => o.tip === "%" ? `%${o.deger}` : `${Number(o.deger).toLocaleString("tr-TR")} ${o.tip}`;
+  const ne = (z) => {
+    const dk = Math.round((Date.now() - z) / 60000);
+    return dk < 1 ? "az önce" : dk < 60 ? `${dk} dk önce` : `${Math.round(dk / 60)} saat önce`;
+  };
+  const tarihYaz = (t) => new Date(t).toLocaleString("tr-TR", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  const turAdi = { kayit: "Kayıt oldu", damga: "Damga onaylandı", red: "İstek reddedildi", odul: "Ödül kullanıldı", "elle+": "Elle damga eklendi", "elle-": "Elle damga silindi" };
 
   function mesaj(yazi) {
     const m = $("mesaj"); m.textContent = yazi; m.classList.remove("gizli");
-    clearTimeout(m._t); m._t = setTimeout(() => m.classList.add("gizli"), 2200);
+    clearTimeout(m._t); m._t = setTimeout(() => m.classList.add("gizli"), 2500);
   }
 
   async function api(yol, yontem = "GET", govde) {
     const r = await fetch(WORKER_URL + yol, {
-      method: yontem,
+      method: yontem, cache: "no-store",
       headers: { "Content-Type": "application/json", "X-Admin-Key": ANAHTAR },
       body: govde ? JSON.stringify(govde) : undefined,
     });
     const veri = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error(veri.hata || "Hata");
+    if (!r.ok) throw new Error(veri.hata || "Bağlantı hatası");
     return veri;
   }
 
+  function miniDamga(m) {
+    let s = "";
+    for (let i = 0; i < m.hedef; i++) s += `<i class="${i < m.damga ? "d" : ""}"></i>`;
+    return `<span class="mini-damga">${s}</span>`;
+  }
+
+  // Yeni istek gelince kısa bir "dıt" sesi
+  function ses() {
+    try {
+      const c = new (window.AudioContext || window.webkitAudioContext)();
+      const o = c.createOscillator(); const g = c.createGain();
+      o.frequency.value = 880; g.gain.value = 0.15; o.connect(g); g.connect(c.destination);
+      o.start(); o.stop(c.currentTime + 0.18);
+    } catch {}
+  }
+
+  // ---------- Giriş ----------
   async function girisYap(otomatik) {
     ANAHTAR = otomatik || $("anahtar").value.trim();
     if (!ANAHTAR) return;
     try {
-      musteriler = await api("/admin/musteriler");
-      try { localStorage.setItem("birikimAnahtar", ANAHTAR); } catch {}
+      await durumYukle(true);
+      try { localStorage.setItem("ybPanel", ANAHTAR); } catch {}
       $("girisKart").classList.add("gizli");
       $("panel").classList.remove("gizli");
-      listeCiz();
+      clearInterval(yoklama);
+      yoklama = setInterval(() => durumYukle(false).catch(() => {}), 5000);
     } catch (e) {
-      try { localStorage.removeItem("birikimAnahtar"); } catch {}
+      try { localStorage.removeItem("ybPanel"); } catch {}
       if (!otomatik) mesaj(e.message === "Yetkisiz" ? "Şifre yanlış" : "Bağlantı hatası");
     }
   }
 
-  function cikis() {
-    try { localStorage.removeItem("birikimAnahtar"); } catch {}
-    location.reload();
+  // ---------- Bekleyenler ----------
+  async function durumYukle(ilk) {
+    const d = await api("/admin/durum");
+    ayarlar = d.ayarlar;
+    if (ilk) ayarlariCiz();
+    const n = d.bekleyen.length;
+    if (!ilk && n > sonBekleyenSayisi) ses();
+    sonBekleyenSayisi = n;
+    $("bekleyenSayi").innerHTML = n ? `<span class="rozet-sayi">${n}</span>` : "";
+    document.title = n ? `(${n}) Yine Bekleriz · Panel` : "Yine Bekleriz · Panel";
+    $("bekleyenListe").innerHTML = n ? d.bekleyen.map((m) => `
+      <div class="satir">
+        <div class="bilgi">
+          <div class="ad">${kac(m.ad)} ${m.odulHazir ? '<span class="etiket">ÖDÜL HAZIR</span>' : ""}</div>
+          <small>${miniDamga(m)}${m.damga}/${m.hedef} · ${telYaz(m.tel)} · ${ne(m.zaman)}</small>
+        </div>
+        <div class="butonlar">
+          ${m.odulHazir
+            ? `<button onclick="islem('odul','${m.id}')">Ödülü kullandır</button>`
+            : `<button class="yesil" onclick="islem('onay','${m.id}')">Onayla +1</button>`}
+          <button class="sil" onclick="islem('reddet','${m.id}')">Reddet</button>
+        </div>
+      </div>`).join("") : '<div class="bos">Şu an bekleyen yok.</div>';
+  }
+
+  async function islem(tur, id) {
+    if (tur === "odul" && !confirm("Ödül kullanıldı mı? Damgalar sıfırlanacak.")) return;
+    try {
+      const m = await api("/admin/" + tur, "POST", { id });
+      mesaj(tur === "onay" ? `${m.ad}: damga eklendi (${m.damga}/${m.hedef})` : tur === "odul" ? `${m.ad}: ödül kullanıldı` : "Reddedildi");
+      const i = musteriler.findIndex((x) => x.id === id);
+      if (i >= 0) musteriler[i] = m;
+      await durumYukle(false);
+      if (!$("s-musteriler").classList.contains("gizli")) listeCiz();
+    } catch (e) { mesaj(e.message); }
+  }
+
+  // ---------- Müşteriler ----------
+  async function musterileriYukle() {
+    try { musteriler = await api("/admin/musteriler"); listeCiz(); } catch (e) { mesaj(e.message); }
   }
 
   function listeCiz() {
-    const q = $("ara").value.toLocaleLowerCase("tr");
-    const liste = musteriler.filter((m) => !q || m.ad.toLocaleLowerCase("tr").includes(q) || (m.tel || "").includes(q));
-    $("sayi").textContent = musteriler.length;
-    $("liste").innerHTML = liste.length ? liste.map((m) => `
-      <div class="musteri" onclick="detayAc('${m.id}')">
-        <div>${kac(m.ad)}<small>${m.aySayisi}/${m.hedefAy} ay · ${gramYaz(m.toplamGram)} gr${m.tel ? " · " + kac(m.tel) : ""}</small></div>
-        ${m.hedefTamam ? `<span class="rozet ${m.odulVerildi ? "verildi" : ""}">${m.odulVerildi ? "Ödül verildi" : "Ödül hak etti"}</span>` : ""}
-      </div>`).join("") : '<div style="color:var(--soluk)">Müşteri yok.</div>';
+    const q = $("ara").value.toLocaleLowerCase("tr").replace(/\s/g, "");
+    const liste = musteriler.filter((m) => !q || m.ad.toLocaleLowerCase("tr").replace(/\s/g, "").includes(q) || (m.tel || "").includes(q.replace(/^0/, "")));
+    $("musteriSayi").textContent = musteriler.length;
+    $("musteriListe").innerHTML = liste.length ? liste.map((m) => `
+      <div class="satir" style="cursor:pointer" onclick="detayAcKapa('${m.id}')">
+        <div class="bilgi">
+          <div class="ad">${kac(m.ad)} ${m.odulHazir ? '<span class="etiket">ÖDÜL HAZIR</span>' : ""}</div>
+          <small>${miniDamga(m)}${m.damga}/${m.hedef} · ${telYaz(m.tel)} · ${m.toplamGelis} geliş · ${m.odulSayisi} ödül</small>
+        </div>
+      </div>
+      ${acikDetay === m.id ? detayHtml(m) : ""}`).join("") : '<div class="bos">Müşteri yok.</div>';
+  }
+
+  function detayHtml(m) {
+    return `<div class="detay">
+      <div class="butonlar">
+        <button class="ikincil" onclick="damgaDegistir('${m.id}',-1)" ${m.damga <= 0 ? "disabled" : ""}>− Damga</button>
+        <button class="yesil" onclick="damgaDegistir('${m.id}',1)" ${m.damga >= m.hedef ? "disabled" : ""}>+ Damga</button>
+        ${m.odulHazir ? `<button onclick="islem('odul','${m.id}')">Ödülü kullandır</button>` : ""}
+        <button class="sil" onclick="musteriSil('${m.id}')">Sil</button>
+      </div>
+      <div class="gecmis">${(m.gecmis || []).map((g) => `${tarihYaz(g.t)} · ${turAdi[g.tur] || g.tur}`).join("<br>")}</div>
+    </div>`;
+  }
+
+  function detayAcKapa(id) { acikDetay = acikDetay === id ? null : id; listeCiz(); }
+
+  async function damgaDegistir(id, fark) {
+    try {
+      const m = await api("/admin/damga", "POST", { id, fark });
+      musteriler[musteriler.findIndex((x) => x.id === id)] = m;
+      listeCiz();
+    } catch (e) { mesaj(e.message); }
+  }
+
+  async function musteriSil(id) {
+    const m = musteriler.find((x) => x.id === id);
+    if (!confirm(`${m.ad} silinsin mi? Damgaları da silinir.`)) return;
+    try {
+      await api("/admin/musteri?id=" + id, "DELETE");
+      musteriler = musteriler.filter((x) => x.id !== id);
+      acikDetay = null; listeCiz(); mesaj("Silindi");
+    } catch (e) { mesaj(e.message); }
   }
 
   async function musteriEkle() {
-    const ad = $("yAd").value.trim();
-    if (!ad) return mesaj("İsim yaz");
     try {
-      const m = await api("/admin/musteri", "POST", { ad, tel: $("yTel").value, hedefAy: $("yHedef").value, odul: $("yOdul").value });
+      const m = await api("/admin/musteri", "POST", { ad: $("yAd").value, tel: $("yTel").value });
       musteriler.push(m);
       musteriler.sort((a, b) => a.ad.localeCompare(b.ad, "tr"));
-      $("yAd").value = ""; $("yTel").value = ""; $("yOdul").value = "";
-      mesaj("Müşteri eklendi");
-      detayAc(m.id);
+      $("yAd").value = ""; $("yTel").value = "";
+      acikDetay = m.id; listeCiz(); mesaj("Eklendi");
     } catch (e) { mesaj(e.message); }
   }
 
-  function guncelle(m) {
-    const i = musteriler.findIndex((x) => x.id === m.id);
-    if (i >= 0) musteriler[i] = m; else musteriler.push(m);
-    secili = m;
+  // ---------- Ayarlar ----------
+  function odulSatiri(o = { urun: "", tip: "TL", deger: "" }) {
+    const d = document.createElement("div");
+    d.className = "odul-satir";
+    d.innerHTML = `
+      <input class="o-urun" placeholder="Ürün (örn. 24 ayar gram)" value="${kac(o.urun)}">
+      <select class="o-tip">
+        <option value="TL" ${o.tip === "TL" ? "selected" : ""}>TL</option>
+        <option value="%" ${o.tip === "%" ? "selected" : ""}>%</option>
+        <option value="$" ${o.tip === "$" ? "selected" : ""}>$</option>
+      </select>
+      <input class="o-deger" type="number" min="0" step="any" placeholder="Miktar" value="${kac(o.deger)}">
+      <button class="sil" title="Sil">✕</button>`;
+    d.querySelector("button").onclick = () => d.remove();
+    $("odulSatirlari").appendChild(d);
   }
 
-  function detayAc(id) {
-    secili = musteriler.find((m) => m.id === id);
-    if (!secili) return;
-    $("listeBolum").classList.add("gizli");
-    $("detayBolum").classList.remove("gizli");
-    $("kTarih").value = bugun();
-    $("kAdet").value = 1; $("kNot").value = "";
-    gramHesapla();
-    detayCiz();
-    window.scrollTo(0, 0);
-  }
-
-  function detayCiz() {
-    const m = secili;
-    $("dAd").textContent = m.ad + (m.tel ? " · " + m.tel : "");
-    $("dOzet").innerHTML = `<span>Toplam: <b>${gramYaz(m.toplamGram)} gr</b></span><span>Ay: <b>${m.aySayisi}/${m.hedefAy}</b></span><span>Seri: <b>${m.seri} ay</b></span>`;
-    if (m.hedefTamam) {
-      $("dOdul").innerHTML = m.odulVerildi
-        ? `<span class="rozet verildi">Ödül verildi</span> <button class="sil" onclick="odulIsaretle(false)">geri al</button>`
-        : `<div class="butonlar"><span class="rozet">Ödül hak etti${m.odul ? ": " + kac(m.odul) : ""}</span><button onclick="odulIsaretle(true)">Ödül verildi</button></div>`;
-    } else {
-      $("dOdul").innerHTML = `<small style="color:var(--soluk)">Hedefe ${m.hedefAy - m.aySayisi} ay kaldı${m.odul ? " · Ödül: " + kac(m.odul) : ""}</small>`;
-    }
-    $("dKayitlar").innerHTML = m.kayitlar.length ? m.kayitlar.map((k) => `
-      <div class="satir">
-        <div>${k.adet > 1 ? k.adet + " × " : ""}${kac(k.urun)} · ${gramYaz(k.gram)} gr<small>${tarihYaz(k.tarih)}${k.not ? " · " + kac(k.not) : ""}</small></div>
-        <button class="sil" onclick="kayitSil('${k.kid}')">Sil</button>
-      </div>`).join("") : '<div style="color:var(--soluk)">Henüz kayıt yok.</div>';
-    $("aHedef").value = m.hedefAy;
-    $("aOdul").value = m.odul || "";
-  }
-
-  function listeyeDon() {
-    $("detayBolum").classList.add("gizli");
-    $("listeBolum").classList.remove("gizli");
-    listeCiz();
-  }
-
-  function gramHesapla() {
-    const s = $("kUrun").selectedOptions[0];
-    const g = parseFloat(s.dataset.g);
-    const adet = Math.max(1, parseInt($("kAdet").value) || 1);
-    $("kGram").value = g ? (g * adet).toFixed(2) : "";
-    if (!g) $("kGram").focus();
-  }
-
-  async function kayitEkle() {
-    const gram = parseFloat(String($("kGram").value).replace(",", "."));
-    if (!(gram > 0)) return mesaj("Gram gir");
-    try {
-      const m = await api("/admin/kayit", "POST", {
-        id: secili.id, urun: $("kUrun").value, adet: $("kAdet").value,
-        gram, tarih: $("kTarih").value, not: $("kNot").value,
-      });
-      guncelle(m); detayCiz();
-      $("kNot").value = "";
-      mesaj(m.hedefTamam && !m.odulVerildi ? "Kaydedildi · Müşteri ödülü hak etti!" : "Kaydedildi");
-    } catch (e) { mesaj(e.message); }
-  }
-
-  async function kayitSil(kid) {
-    if (!confirm("Bu kayıt silinsin mi?")) return;
-    try {
-      const m = await api(`/admin/kayit?id=${secili.id}&kid=${kid}`, "DELETE");
-      guncelle(m); detayCiz(); mesaj("Silindi");
-    } catch (e) { mesaj(e.message); }
-  }
-
-  async function odulIsaretle(durum) {
-    try {
-      const m = await api("/admin/guncelle", "POST", { id: secili.id, odulVerildi: durum });
-      guncelle(m); detayCiz();
-    } catch (e) { mesaj(e.message); }
+  function ayarlariCiz() {
+    $("aDukkan").value = ayarlar.dukkan;
+    $("aHedef").value = ayarlar.hedef;
+    $("odulSatirlari").innerHTML = "";
+    ayarlar.oduller.forEach(odulSatiri);
+    if (!ayarlar.oduller.length) odulSatiri();
   }
 
   async function ayarKaydet() {
+    const oduller = [...document.querySelectorAll(".odul-satir")].map((d) => ({
+      urun: d.querySelector(".o-urun").value,
+      tip: d.querySelector(".o-tip").value,
+      deger: parseFloat(String(d.querySelector(".o-deger").value).replace(",", ".")),
+    }));
     try {
-      const m = await api("/admin/guncelle", "POST", { id: secili.id, hedefAy: $("aHedef").value, odul: $("aOdul").value });
-      guncelle(m); detayCiz(); mesaj("Kaydedildi");
+      ayarlar = await api("/admin/ayarlar", "POST", { dukkan: $("aDukkan").value, hedef: $("aHedef").value, oduller });
+      ayarlariCiz(); mesaj("Kaydedildi");
     } catch (e) { mesaj(e.message); }
   }
 
-  async function musteriSil() {
-    if (!confirm(`${secili.ad} ve tüm kayıtları silinsin mi?`)) return;
-    try {
-      await api(`/admin/musteri?id=${secili.id}`, "DELETE");
-      musteriler = musteriler.filter((m) => m.id !== secili.id);
-      listeyeDon(); mesaj("Müşteri silindi");
-    } catch (e) { mesaj(e.message); }
+  // ---------- QR ----------
+  function qrResmi(boyut) {
+    const kutu = document.createElement("div");
+    new QRCode(kutu, { text: QR_URL, width: boyut, height: boyut, correctLevel: QRCode.CorrectLevel.M });
+    const c = kutu.querySelector("canvas");
+    return c ? c.toDataURL("image/png") : kutu.querySelector("img").src;
   }
 
-  const musteriLinki = () => `${SITE_URL}?id=${secili.id}`;
-  function sayfayiAc() { window.open(musteriLinki(), "_blank"); }
+  function qrOnizle() {
+    $("qrOnizleme").innerHTML = `<img src="${qrResmi(220)}" width="220" height="220" alt="Tezgâh QR">`;
+  }
 
-  function kartYazdir() {
-    const kutu = $("qrGizli");
-    kutu.innerHTML = "";
-    new QRCode(kutu, { text: musteriLinki(), width: 300, height: 300, correctLevel: QRCode.CorrectLevel.M });
-    const tuval = kutu.querySelector("canvas");
-    const qr = tuval ? tuval.toDataURL("image/png") : kutu.querySelector("img").src;
+  function afisYazdir() {
     const p = window.open("", "_blank");
     if (!p) return mesaj("Açılır pencere engellendi");
-    p.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Yine Bekleriz Kartı</title>
+    const oduller = ayarlar.oduller.map((o) => `<li><span>${kac(o.urun)}</span><b>${odulYaz(o)} indirim</b></li>`).join("");
+    p.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Yine Bekleriz Afişi</title>
       <style>
-        @page { size: 85.6mm 54mm; margin: 0; }
-        body { margin: 0; font-family: system-ui, sans-serif; }
-        .kart { width: 85.6mm; height: 54mm; box-sizing: border-box; padding: 4mm 5mm;
-          display: flex; align-items: center; gap: 4mm; background: #14110c; color: #f3ede1;
-          -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-        .kart img { width: 34mm; height: 34mm; background: #fff; padding: 1.5mm; border-radius: 2mm; }
-        .dukkan { color: #d4a843; font-size: 8pt; letter-spacing: .15em; text-transform: uppercase; }
-        .baslik { font-size: 12pt; font-weight: 700; margin: 1.5mm 0; }
-        .ad { font-size: 10pt; color: #f0d48a; }
-        .not { font-size: 6.5pt; color: #a99c84; margin-top: 2mm; }
+        @page { size: A5 portrait; margin: 0; }
+        html, body { margin: 0; padding: 0; }
+        body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+        .afis {
+          width: 148mm; height: 209mm; overflow: hidden; box-sizing: border-box; padding: 12mm 12mm 10mm;
+          background: #14110c; color: #f3ede1; text-align: center;
+          display: flex; flex-direction: column; align-items: center;
+          -webkit-print-color-adjust: exact; print-color-adjust: exact;
+        }
+        .dukkan { color: #d4a843; letter-spacing: .25em; font-size: 10pt; text-transform: uppercase; }
+        h1 { font-size: 30pt; margin: 3mm 0 1mm; }
+        .alt { font-size: 13pt; color: #f0d48a; margin-bottom: 6mm; }
+        .qr { background: #fff; padding: 4mm; border-radius: 4mm; }
+        .qr img { width: 62mm; height: 62mm; display: block; }
+        .adim { font-size: 11pt; color: #a99c84; margin: 5mm 0 4mm; line-height: 1.5; }
+        ul { list-style: none; padding: 0; margin: 0; width: 100%; font-size: 11pt; }
+        li { display: flex; justify-content: space-between; padding: 2mm 0; border-bottom: .3mm solid #3a3020; }
+        li b { color: #f0d48a; }
       </style></head><body>
-      <div class="kart">
-        <img src="${qr}">
-        <div>
-          <div class="dukkan">Asil Kuyumculuk</div>
-          <div class="baslik">Yine Bekleriz</div>
-          <div class="ad">${kac(secili.ad)}</div>
-          <div class="not">Telefonunuzun kamerasıyla okutun, birikiminizi görün.</div>
-        </div>
+      <div class="afis">
+        <div class="dukkan">${kac(ayarlar.dukkan)}</div>
+        <h1>Yine Bekleriz</h1>
+        <div class="alt">${ayarlar.hedef} gelişte indirim kazan!</div>
+        <div class="qr"><img src="${qrResmi(600)}"></div>
+        <div class="adim">Telefonunuzun kamerasıyla okutun.<br>Her alışverişte bir damga, ${ayarlar.hedef} damgada ödül.</div>
+        <ul>${oduller}</ul>
       </div>
       <script>window.onload = () => setTimeout(() => window.print(), 300);<\/script>
       </body></html>`);
     p.document.close();
   }
 
-  // Kayıtlı şifreyle otomatik giriş
-  try { const k = localStorage.getItem("birikimAnahtar"); if (k) girisYap(k); } catch {}
+  // ---------- Sekmeler ----------
+  function sekmeAc(s) {
+    document.querySelectorAll(".sekme[data-s]").forEach((b) => b.classList.toggle("aktif", b.dataset.s === s));
+    for (const ad of ["bekleyen", "musteriler", "ayarlar", "qr"]) $("s-" + ad).classList.toggle("gizli", ad !== s);
+    if (s === "musteriler") musterileriYukle();
+    if (s === "ayarlar") ayarlariCiz();
+    if (s === "qr") qrOnizle();
+  }
+
+  document.querySelectorAll(".sekme[data-s]").forEach((b) => b.onclick = () => sekmeAc(b.dataset.s));
+  $("girisBtn").onclick = () => girisYap();
   $("anahtar").addEventListener("keydown", (e) => { if (e.key === "Enter") girisYap(); });
+  $("cikisBtn").onclick = () => { try { localStorage.removeItem("ybPanel"); } catch {} location.reload(); };
+  $("ara").oninput = listeCiz;
+  $("ekleBtn").onclick = musteriEkle;
+  $("odulEkleBtn").onclick = () => odulSatiri();
+  $("ayarKaydetBtn").onclick = ayarKaydet;
+  $("afisBtn").onclick = afisYazdir;
+  $("testBtn").onclick = () => window.open(QR_URL, "_blank");
+
+  try { const k = localStorage.getItem("ybPanel"); if (k) girisYap(k); } catch {}
 </script>
 </body>
 </html>

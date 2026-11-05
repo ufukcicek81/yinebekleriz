@@ -1,42 +1,25 @@
 # Yine Bekleriz
 
-Asil Kuyumculuk'un düzenli altın biriktiren müşterileri için QR kartlı birikim ve ödül sistemi. Müşteri uygulama yüklemez; kartındaki QR'ı kamerayla okutup kendi sayfasını görür.
+Asil Kuyumculuk sadakat programı. Tezgâhta tek bir QR durur. Müşteri her alışverişinde onu okutur, dükkân onaylar ve müşteriye bir damga eklenir. Belirlenen sayıda damgaya (ör. 5) ulaşan müşteri, bir sonraki alışverişinde kalem kalem indirim kazanır (ör. 14 ayar %10, 24 ayar 200 TL). Müşterinin uygulama yüklemesi gerekmez.
 
-- `index.html` – Müşteri sayfası (QR ile açılır)
-- `admin.html` – Dükkân paneli (müşteri ekle, alım kaydet, QR kart yazdır)
-- `worker/worker.js` + `wrangler.toml` – Cloudflare Worker (veriler Cloudflare KV'de). Cloudflare GitHub'a bağlı: repoya yüklenen her değişiklik otomatik yayına çıkar.
+- `index.html` – Müşteri sayfası (tezgâh QR'ı buraya açılır)
+- `admin.html` – Dükkân paneli
+- `worker/worker.js` + `wrangler.toml` – Cloudflare Worker (veriler Cloudflare KV'de). Cloudflare bu repoya bağlı: yüklenen her değişiklik otomatik yayına çıkar.
 
-## Kurulum
+## Adresler
+- Müşteri: https://ufukcicek81.github.io/yinebekleriz/
+- Panel: https://ufukcicek81.github.io/yinebekleriz/admin.html
+- Worker: https://yinebekleriz.ufuk87900.workers.dev
 
-### 1) GitHub Pages'i aç
-Repo → **Settings** → **Pages** → Branch: `main`, klasör: `/ (root)` → **Save**.
-Birkaç dakika sonra adres: `https://ufukcicek81.github.io/yinebekleriz/`
+## Nasıl çalışır
+1. **Tezgâh QR** sekmesinden A5 afişi yazdırıp tezgâha koy.
+2. Müşteri ilk okuttuğunda adını ve telefonunu bir kez yazar. Telefonu onu hatırlar. Telefon değişirse aynı numarayı yazınca kartı geri gelir.
+3. Her okutmada **Bekleyenler** sekmesine düşer (yeni istek gelince panel kısa bir ses çıkarır). Alışveriş yaptıysa **Onayla +1**, yapmadıysa **Reddet**.
+4. Damgalar tamamlanınca hem müşteride hem panelde "ÖDÜL HAZIR" çıkar. Ödülü kullandırınca **Ödülü kullandır**'a bas, damgalar sıfırlanır.
+5. **Ödül ayarları** sekmesinden kaç gelişte ödül verileceğini ve ürün ürün indirimleri (TL, % veya $) değiştirebilirsin.
+6. **Müşteriler** sekmesinden elle müşteri ekleyebilir, damga ekleyip silebilir, geçmişi görebilirsin.
 
-### 2) Worker'ı yayına al (bilgisayardan, CMD)
-`worker` klasöründeki iki dosyayı bir klasöre koy (ör. `C:\yinebekleriz`):
-
-```
-cd C:\yinebekleriz
-wrangler kv namespace create BIRIKIM
-```
-Çıkan `id` değerini Notepad ile `wrangler.toml` içindeki `BURAYA_KV_ID` yerine yapıştır.
-
-```
-wrangler secret put ADMIN_KEY
-wrangler deploy
-```
-`ADMIN_KEY` panel şifren olur. Deploy sonunda `https://yinebekleriz.XXXX.workers.dev` adresi çıkar.
-
-### 3) Adresi sayfalara yaz
-`index.html` ve `admin.html` içindeki `WORKER_URL` satırında `KULLANICI` yerine kendi Cloudflare alt alan adını yaz.
-
-## Kullanım
-- Panel: `https://ufukcicek81.github.io/yinebekleriz/admin.html` → şifreyle gir.
-- Müşteri ekle → hedef ay ve ödülü yaz → **QR kart yazdır** (kartvizit boyutu).
-- Müşteri her geldiğinde: isminden bul → ürünü seç (çeyrek/yarım/tam gramı kendi dolar) → Kaydet.
-- Aynı ay içindeki birden fazla alım tek ay sayılır. Hedef dolunca "Ödül hak etti" çıkar; ödülü verince "Ödül verildi"ye bas.
-
-## Notlar
-- Bilezik ve "Diğer" seçince gramı elle yaz.
-- Müşteri sayfasında telefon numarası görünmez; her kartın linki tahmin edilemez bir kod içerir.
-- KVKK: müşteriden isim/telefon kaydı için onay al.
+## Kurulum notları
+- Cloudflare'de Worker adı `yinebekleriz`, KV bağlantısı `BIRIKIM`, panel şifresi `ADMIN_KEY` adlı **Secret**.
+- GitHub Pages: Settings → Pages → `main` / root.
+- KVKK: müşteri kayıt ekranında onay kutusu vardır.

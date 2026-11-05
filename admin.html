@@ -74,7 +74,7 @@
 
   <div id="panel" class="gizli">
     <div class="sekmeler">
-      <button class="sekme aktif" data-s="bekleyen">Bugün gelenler<span id="bekleyenSayi"></span></button>
+      <button class="sekme aktif" data-s="bekleyen">Bekleyenler<span id="bekleyenSayi"></span></button>
       <button class="sekme" data-s="musteriler">Müşteriler</button>
       <button class="sekme" data-s="ayarlar">Ödül ayarları</button>
       <button class="sekme" data-s="qr">Tezgâh QR</button>
@@ -83,8 +83,8 @@
 
     <!-- Bekleyenler -->
     <div id="s-bekleyen" class="kart">
-      <h2>Son 24 saatte okutanlar</h2>
-      <p class="ipucu">Müşteri tezgâhtaki QR'ı okutunca damgası hemen eklenir ve burada görünür (günde en fazla 1 damga). Alışveriş yapmadan okuttuysa "Geri al"a basın. Liste bir dakikaya kadar gecikmeli güncellenebilir.</p>
+      <h2>Damga bekleyenler</h2>
+      <p class="ipucu">Müşteri tezgâhtaki QR'ı okutunca burada görünür. Alışverişini yaptıysa onaylayın.</p>
       <div id="bekleyenListe"><div class="bos">Yükleniyor…</div></div>
     </div>
 
@@ -124,7 +124,7 @@
     <!-- QR -->
     <div id="s-qr" class="kart gizli">
       <h2>Tezgâh QR</h2>
-      <p class="ipucu">Bu QR herkes için aynıdır. Yazdırıp tezgâha koyun. Müşteri okutunca ilk seferde adını ve telefonunu yazar, sonraki gelişlerinde sadece okutur; damgası anında eklenir.</p>
+      <p class="ipucu">Bu QR herkes için aynıdır. Yazdırıp tezgâha koyun. Müşteri okutunca ilk seferde adını ve telefonunu yazar, sonraki gelişlerinde sadece okutur.</p>
       <div class="qr-onizleme" id="qrOnizleme"></div>
       <div class="butonlar" style="justify-content:center">
         <button id="afisBtn">Afişi yazdır (A5)</button>
@@ -156,7 +156,7 @@
     return dk < 1 ? "az önce" : dk < 60 ? `${dk} dk önce` : `${Math.round(dk / 60)} saat önce`;
   };
   const tarihYaz = (t) => new Date(t).toLocaleString("tr-TR", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
-  const turAdi = { kayit: "Kayıt oldu", damga: "QR okuttu, damga eklendi", gelis: "QR okuttu (ödül hazırdı)", geri: "Okutma geri alındı", red: "İstek reddedildi", odul: "Ödül kullanıldı", "elle+": "Elle damga eklendi", "elle-": "Elle damga silindi" };
+  const turAdi = { kayit: "Kayıt oldu", damga: "Damga onaylandı", red: "İstek reddedildi", odul: "Ödül kullanıldı", "elle+": "Elle damga eklendi", "elle-": "Elle damga silindi" };
 
   function mesaj(yazi) {
     const m = $("mesaj"); m.textContent = yazi; m.classList.remove("gizli");
@@ -212,36 +212,36 @@
     }
   }
 
-  // ---------- Bugün gelenler ----------
+  // ---------- Bekleyenler ----------
   async function durumYukle(ilk) {
     const d = await api("/admin/durum");
     ayarlar = d.ayarlar;
     if (ilk) ayarlariCiz();
-    const n = d.gelenler.length;
+    const n = d.bekleyen.length;
     if (!ilk && n > sonBekleyenSayisi) ses();
     sonBekleyenSayisi = n;
-    const odulBekleyen = d.gelenler.filter((m) => m.odulHazir).length;
-    $("bekleyenSayi").innerHTML = odulBekleyen ? `<span class="rozet-sayi">${odulBekleyen}</span>` : "";
-    document.title = odulBekleyen ? `(${odulBekleyen} ödül) Yine Bekleriz · Panel` : "Yine Bekleriz · Panel";
-    $("bekleyenListe").innerHTML = n ? d.gelenler.map((m) => `
+    $("bekleyenSayi").innerHTML = n ? `<span class="rozet-sayi">${n}</span>` : "";
+    document.title = n ? `(${n}) Yine Bekleriz · Panel` : "Yine Bekleriz · Panel";
+    $("bekleyenListe").innerHTML = n ? d.bekleyen.map((m) => `
       <div class="satir">
         <div class="bilgi">
           <div class="ad">${kac(m.ad)} ${m.odulHazir ? '<span class="etiket">ÖDÜL HAZIR</span>' : ""}</div>
-          <small>${miniDamga(m)}${m.damga}/${m.hedef} · ${telYaz(m.tel)} · ${ne(m.zaman)}${m.damgaEklendi ? " · damga eklendi" : ""}</small>
+          <small>${miniDamga(m)}${m.damga}/${m.hedef} · ${telYaz(m.tel)} · ${ne(m.zaman)}</small>
         </div>
         <div class="butonlar">
-          ${m.odulHazir ? `<button onclick="islem('odul','${m.id}')">Ödülü kullandır</button>` : ""}
-          <button class="sil" onclick="islem('geri-al','${m.id}')">Geri al</button>
+          ${m.odulHazir
+            ? `<button onclick="islem('odul','${m.id}')">Ödülü kullandır</button>`
+            : `<button class="yesil" onclick="islem('onay','${m.id}')">Onayla +1</button>`}
+          <button class="sil" onclick="islem('reddet','${m.id}')">Reddet</button>
         </div>
-      </div>`).join("") : '<div class="bos">Son 24 saatte okutan yok.</div>';
+      </div>`).join("") : '<div class="bos">Şu an bekleyen yok.</div>';
   }
 
   async function islem(tur, id) {
     if (tur === "odul" && !confirm("Ödül kullanıldı mı? Damgalar sıfırlanacak.")) return;
-    if (tur === "geri-al" && !confirm("Bu okutma geri alınsın mı? (Alışveriş yapmadan okuttuysa)")) return;
     try {
       const m = await api("/admin/" + tur, "POST", { id });
-      mesaj(tur === "odul" ? `${m.ad}: ödül kullanıldı` : `${m.ad}: okutma geri alındı`);
+      mesaj(tur === "onay" ? `${m.ad}: damga eklendi (${m.damga}/${m.hedef})` : tur === "odul" ? `${m.ad}: ödül kullanıldı` : "Reddedildi");
       const i = musteriler.findIndex((x) => x.id === id);
       if (i >= 0) musteriler[i] = m;
       await durumYukle(false);

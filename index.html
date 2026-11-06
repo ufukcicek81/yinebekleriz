@@ -131,19 +131,20 @@
     try { ayar = await api("/ayarlar"); } catch {}
     $("altBaslik").textContent = `${ayar.hedef} gelişte sürpriz indirim kazan`;
     $("icerik").innerHTML = `
-      <div class="kart">
+      <form class="kart" id="kayitForm" onsubmit="return false">
         <h2>Kartınızı açın</h2>
         <label for="tel">Cep telefonunuz</label>
-        <input id="tel" type="tel" inputmode="numeric" placeholder="5xx xxx xx xx" autocomplete="tel">
+        <input id="tel" name="tel" type="tel" inputmode="tel" placeholder="5xx xxx xx xx" autocomplete="tel">
+        <div class="kucuk" style="text-align:left;margin:-6px 0 12px">iPhone'da klavyenin üstünde çıkan kendi numaranıza dokunmanız yeterli.</div>
         <div id="yeniAlan" style="display:none">
           <div class="kucuk" style="text-align:left;margin:0 0 12px">Hoş geldiniz! İlk kez katılıyorsunuz, adınızı yazın:</div>
           <label for="ad">Adınız Soyadınız</label>
-          <input id="ad" type="text" autocomplete="name">
+          <input id="ad" name="name" type="text" autocomplete="name">
           <div class="onay"><input id="onay" type="checkbox"><span>Adımın ve telefonumun sadakat programı için Asil Kuyumculuk tarafından kaydedilmesini kabul ediyorum.</span></div>
         </div>
         <div class="hata" id="hata"></div>
-        <button id="katil">Devam</button>
-      </div>`;
+        <button id="katil" type="submit">Devam</button>
+      </form>`;
     let yeniMusteri = false;
     const gonder = async () => {
       const b = $("katil"); b.disabled = true; $("hata").textContent = "";
@@ -169,7 +170,6 @@
       }
     };
     $("katil").onclick = gonder;
-    $("tel").addEventListener("keydown", (e) => { if (e.key === "Enter") gonder(); });
     $("tel").addEventListener("input", () => { if (yeniMusteri) { yeniMusteri = false; $("yeniAlan").style.display = "none"; $("katil").textContent = "Devam"; } });
     $("tel").focus();
   }

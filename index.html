@@ -94,8 +94,16 @@
 
   const $ = (id) => document.getElementById(id);
   const kac = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
-  const sakla = (v) => { try { v ? localStorage.setItem(ANAHTAR, v) : localStorage.removeItem(ANAHTAR); } catch {} };
-  const oku = () => { try { return localStorage.getItem(ANAHTAR); } catch { return null; } };
+  // Kart numarasını hem tarayıcı hafızasına hem 2 yıllık çereze yazar (biri silinse öbürü kalsın)
+  const sakla = (v) => {
+    try { v ? localStorage.setItem(ANAHTAR, v) : localStorage.removeItem(ANAHTAR); } catch {}
+    try { document.cookie = `${ANAHTAR}=${v || ""}; path=/; max-age=${v ? 63072000 : 0}; SameSite=Lax; Secure`; } catch {}
+  };
+  const oku = () => {
+    try { const v = localStorage.getItem(ANAHTAR); if (v) return v; } catch {}
+    try { const m = document.cookie.match(new RegExp("(?:^|; )" + ANAHTAR + "=([a-z0-9]+)")); if (m) return m[1]; } catch {}
+    return null;
+  };
   const odulYaz = (o) => o.tip === "%" ? `%${o.deger} indirim` : `${Number(o.deger).toLocaleString("tr-TR")} ${o.tip === "$" ? "$" : "TL"} indirim`;
 
   // Tezgâhtaki QR "?tezgah=1" ile açılır: o zaman damga isteği otomatik gider
@@ -116,32 +124,54 @@
   }
 
   // ---------- Kayıt ----------
+  // 1. adım: sadece telefon. Kayıtlıysa kart hemen açılır.
+  // 2. adım: kayıtlı değilse ad + onay istenir.
   async function kayitEkrani() {
-    let ayar = { hedef: 5, oduller: [] };
+    let ayar = { hedef: 5 };
     try { ayar = await api("/ayarlar"); } catch {}
-    $("altBaslik").textContent = `${ayar.hedef} gelişte indirim kazan`;
+    $("altBaslik").textContent = `${ayar.hedef} gelişte sürpriz indirim kazan`;
     $("icerik").innerHTML = `
       <div class="kart">
-        <h2>Karta katıl</h2>
-        <label for="ad">Adınız Soyadınız</label>
-        <input id="ad" type="text" autocomplete="name">
+        <h2>Kartınızı açın</h2>
         <label for="tel">Cep telefonunuz</label>
-        <input id="tel" type="tel" inputmode="tel" placeholder="5xx xxx xx xx" autocomplete="tel">
-        <div class="onay"><input id="onay" type="checkbox"><span>Adımın ve telefonumun sadakat programı için Asil Kuyumculuk tarafından kaydedilmesini kabul ediyorum.</span></div>
+        <input id="tel" type="tel" inputmode="numeric" placeholder="5xx xxx xx xx" autocomplete="tel">
+        <div id="yeniAlan" style="display:none">
+          <div class="kucuk" style="text-align:left;margin:0 0 12px">Hoş geldiniz! İlk kez katılıyorsunuz, adınızı yazın:</div>
+          <label for="ad">Adınız Soyadınız</label>
+          <input id="ad" type="text" autocomplete="name">
+          <div class="onay"><input id="onay" type="checkbox"><span>Adımın ve telefonumun sadakat programı için Asil Kuyumculuk tarafından kaydedilmesini kabul ediyorum.</span></div>
+        </div>
         <div class="hata" id="hata"></div>
-        <button id="katil">Katıl</button>
-        <div class="kucuk">Daha önce katıldıysanız sadece telefonunuzu yazmanız yeterli.</div>
-      </div>
-      ${ayar.oduller.length ? `<div class="kart"><h2>${ayar.hedef} gelişte kazanacağınız indirimler</h2><ul class="odul-listesi">${ayar.oduller.map((o) => `<li><span>${kac(o.urun)}</span><b>${odulYaz(o)}</b></li>`).join("")}</ul></div>` : ""}`;
-    $("katil").onclick = async () => {
+        <button id="katil">Devam</button>
+      </div>`;
+    let yeniMusteri = false;
+    const gonder = async () => {
       const b = $("katil"); b.disabled = true; $("hata").textContent = "";
       try {
-        const k = await api("/kayit", { ad: $("ad").value, tel: $("tel").value, onay: $("onay").checked });
+        const govde = yeniMusteri
+          ? { tel: $("tel").value, ad: $("ad").value, onay: $("onay").checked }
+          : { tel: $("tel").value };
+        const k = await api("/kayit", govde);
         sakla(k.id);
         kartim = k;
         if (tezgahtan) await istekGonder(); else kartCiz();
-      } catch (e) { $("hata").textContent = e.message; b.disabled = false; }
+      } catch (e) {
+        // Numara kayıtlı değilse sunucu ad ister: 2. adımı aç
+        if (!yeniMusteri && /Adınızı/.test(e.message)) {
+          yeniMusteri = true;
+          $("yeniAlan").style.display = "block";
+          $("katil").textContent = "Katıl";
+          $("ad").focus();
+        } else {
+          $("hata").textContent = e.message;
+        }
+        b.disabled = false;
+      }
     };
+    $("katil").onclick = gonder;
+    $("tel").addEventListener("keydown", (e) => { if (e.key === "Enter") gonder(); });
+    $("tel").addEventListener("input", () => { if (yeniMusteri) { yeniMusteri = false; $("yeniAlan").style.display = "none"; $("katil").textContent = "Devam"; } });
+    $("tel").focus();
   }
 
   // ---------- Kart ----------

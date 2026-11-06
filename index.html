@@ -40,9 +40,9 @@
   .link { background: none; color: var(--soluk); font-weight: 400; font-size: 13px; padding: 8px; text-decoration: underline; }
   .hata { color: var(--kirmizi); font-size: 14px; margin-bottom: 10px; min-height: 1px; }
 
-  .damgalar { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 6px 0 14px; }
+  .damgalar { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin: 6px 0 14px; }
   .damga {
-    aspect-ratio: 1; border-radius: 50%; border: 2px dashed var(--cizgi);
+    width: 62px; height: 62px; border-radius: 50%; border: 2px dashed var(--cizgi);
     display: grid; place-items: center; color: var(--soluk); font-size: 15px; font-weight: 600;
   }
   .damga.dolu {
